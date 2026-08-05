@@ -48,7 +48,8 @@ def get_oauth_token():
 
 def get_conn():
     token = get_oauth_token()
-    user  = urllib.parse.quote("jayanthdolai07@gmail.com", safe="")
+    client_id = os.environ["DATABRICKS_CLIENT_ID"]
+    user  = urllib.parse.quote(client_id, safe="")
     pw    = urllib.parse.quote(token, safe="")
     conn_str = (
         f"postgresql://{user}:{pw}"
