@@ -330,7 +330,6 @@ with gr.Blocks(
         with gr.Row(equal_height=True):
             ticket_id_input = gr.Number(
                 label="🎫 Ticket ID", precision=0, scale=1,
-                placeholder="Enter ticket ID...",
             )
             load_btn = gr.Button("Load Ticket →", variant="primary", scale=1)
 
