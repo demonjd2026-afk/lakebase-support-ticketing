@@ -1,47 +1,50 @@
-# 🎫 Lakebase Support Ticketing System
+# Lakebase Support Ticketing System
 
 > **Databricks Bootcamp — Day 1 Homework**
 > An internal support ticketing app powered by **Databricks Lakebase** (managed Postgres OLTP) and deployed via **Databricks Apps**.
 
+**🔗 Live App:** https://support-ticketing-7474654640109575.aws.databricksapps.com
+**📄 Full project write-up (PDF):** `Lakebase_Support_Ticketing_System.pdf` (in repo root)
+
 ---
 
-## 📌 Overview
+## Overview
 
 This project builds a full-stack internal support system where users can:
 
-- 📋 View all support tickets
-- 🔍 Select a ticket and read its message thread
-- ✏️ Create a new ticket
-- 💬 Add messages to an existing ticket
-- 🔄 Update a ticket's status
-- 🎯 Filter tickets by status *(bonus)*
-- 📊 View ticket statistics *(bonus)*
+- View all support tickets
+- Select a ticket and read its message thread
+- Create a new ticket
+- Add messages to an existing ticket
+- Update a ticket's status
+- Filter tickets by status *(bonus)*
+- View live ticket statistics *(bonus)*
+- Delete a ticket with a confirmation step *(bonus)*
 
 All operational data is stored in and served from **Lakebase** — Databricks' managed PostgreSQL OLTP engine — not Delta Lake analytics tables.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Databricks Platform                      │
-│                                                             │
-│  ┌──────────────────┐        ┌──────────────────────────┐  │
-│  │  Databricks App  │        │        Lakebase          │  │
-│  │  (Streamlit)     │◄──────►│  (Managed PostgreSQL)    │  │
-│  │                  │        │                          │  │
-│  │  • Ticket List   │        │  ┌────────────────────┐  │  │
-│  │  • Message View  │        │  │  tickets           │  │  │
-│  │  • Create Form   │        │  │  ticket_messages   │  │  │
-│  │  • Status Update │        │  └────────────────────┘  │  │
-│  └──────────────────┘        └──────────────────────────┘  │
-│           │                                                  │
-│           │  Auth: Databricks PAT (OAuth token)             │
-│           │  Connection: psycopg2 via LAKEBASE_CONN env var │
-└─────────────────────────────────────────────────────────────┘
-                         │
-                    (browser)
++---------------------------------------------------------------+
+|                     Databricks Platform                        |
+|                                                                  |
+|   +------------------+        +---------------------------+   |
+|   |  Databricks App   |        |         Lakebase            |   |
+|   |  (Gradio, Python) |<------>|   (Managed PostgreSQL)       |   |
+|   |                    |        |                              |   |
+|   |  - All Tickets     |        |   tickets                    |   |
+|   |  - View & Update   |        |   ticket_messages             |   |
+|   |  - New Ticket       |        +---------------------------+   |
+|   +------------------+                                         |
+|            |                                                    |
+|            |  Auth: Service-principal OAuth (client_credentials)|
+|            |  Secret: Databricks secret scope -> app.yml -> env |
++---------------------------------------------------------------+
+                        |
+                   (browser)
                     End User
 ```
 
@@ -57,7 +60,7 @@ All operational data is stored in and served from **Lakebase** — Databricks' m
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 ```sql
 CREATE TABLE tickets (
@@ -85,204 +88,163 @@ CREATE INDEX idx_tickets_priority   ON tickets(priority);
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 lakebase-support-ticketing/
 │
-├── README.md                   ← you are here
-├── .gitignore                  ← excludes secrets, __pycache__, .env
+├── README.md
+├── Lakebase_Support_Ticketing_System.pdf   <- full write-up with screenshots
+├── .gitignore
 │
 ├── sql/
-│   ├── 01_create_schema.sql    ← DDL: create tables + indexes (reference)
-│   └── 02_seed_data.sql        ← DML: sample tickets + messages (reference)
+│   ├── 01_create_schema.sql
+│   └── 02_seed_data.sql
+│
+├── notebooks/
+│   └── setup_lakebase.ipynb
 │
 └── app/
-    ├── app.py                  ← main Streamlit application  [Phase 3]
-    ├── db.py                   ← Lakebase connection + query helpers  ✅ done
-    └── requirements.txt        ← psycopg2-binary, streamlit, pandas  ✅ done
+    ├── app.py            <- Gradio UI
+    ├── app.yml           <- Databricks Apps entrypoint + secret wiring
+    ├── db.py             <- Lakebase connection + query helpers
+    └── requirements.txt
 ```
 
 ---
 
-## ✅ Progress Tracker
+## ✅ Status — Complete
 
 | Phase | Description | Status |
 |---|---|---|
-| **Phase 1** | Lakebase project + schema + seed data | ✅ Complete |
-| **Phase 2** | `db.py` — connection layer + all query helpers | ✅ Complete |
-| **Phase 3** | `app.py` — Streamlit UI | 🔄 In progress |
-| **Phase 4** | Databricks App deployment + smoke test | ⏳ Pending |
-| **Phase 5** | Bonus features | ⏳ Pending |
+| Phase 1 | Lakebase schema + seed data | ✅ Complete |
+| Phase 2 | `db.py` — connection + query layer | ✅ Complete |
+| Phase 3 | `app.py` — Gradio UI | ✅ Complete |
+| Phase 4 | Databricks App deployment | ✅ Complete — **live** |
+| Phase 5 | Bonus features | ✅ Complete |
 
 ---
 
-## 🚀 Phase 1 — Lakebase Setup ✅
+## Phase 1 — Lakebase Setup
 
-**What was done:**
+- Lakebase project `support-ticketing`, branch `production`, database `databricks_postgres`
+- Schema created directly in the Lakebase SQL Editor
+- Seeded 4 tickets across 3 statuses (`open`, `in_progress`, `resolved`) with 11 threaded messages
 
-1. Created Lakebase project `support-ticketing` in Databricks workspace
-   - URL: `dbc-291b687e-da89.cloud.databricks.com/lakebase/projects`
-   - Branch: `production`
-   - Database: `databricks_postgres`
-   - Auth: OAuth (Databricks identity)
-
-2. Ran `sql/01_create_schema.sql` directly in Lakebase SQL Editor
-   - Created `tickets` table (7 columns including `priority` and `category`)
-   - Created `ticket_messages` table with FK → `tickets(ticket_id) ON DELETE CASCADE`
-   - Created 3 indexes: `idx_messages_ticket_id`, `idx_tickets_status`, `idx_tickets_priority`
-   - Result: **7 queries executed — Statement executed successfully (297ms)**
-
-3. Ran `sql/02_seed_data.sql` directly in Lakebase SQL Editor
-   - Inserted 4 tickets across 3 statuses: `open`, `in_progress`, `resolved`
-   - Inserted 11 messages (3 per ticket for tickets 1–3, 2 for ticket 4)
-   - Result: **4 rows verified (316ms)**
-
-**Verified data:**
-
-| ticket_id | title | status | priority | messages |
-|---|---|---|---|---|
-| 1 | Databricks cluster auto-terminates during pipeline run | open | high | 3 |
-| 2 | Unable to access Unity Catalog schema after permission update | in_progress | high | 3 |
-| 3 | Delta table OPTIMIZE job taking longer than expected | resolved | medium | 3 |
-| 4 | Lakebase connection string not recognized in Databricks App | open | medium | 2 |
+**Verification query:**
+```sql
+SELECT t.ticket_id, t.title, t.status, t.priority,
+       COUNT(m.message_id) AS message_count
+FROM tickets t
+LEFT JOIN ticket_messages m ON t.ticket_id = m.ticket_id
+GROUP BY t.ticket_id, t.title, t.status, t.priority
+ORDER BY t.ticket_id;
+```
 
 ---
 
-## 🚀 Phase 2 — Database Helper Layer ✅
+## Phase 2 — Database Helper Layer (`app/db.py`)
 
-**What was done:**
-
-Built `app/db.py` — all SQL isolated here, `app.py` never writes raw SQL.
-
-**Connection:** reads `LAKEBASE_CONN` env var at runtime:
-```
-postgresql://token:<PAT>@dbc-291b687e-da89.cloud.databricks.com:5432/databricks_postgres
-```
-
-**Functions implemented:**
+All SQL is isolated in `db.py`. Inside Databricks Apps, the platform injects a service-principal
+`DATABRICKS_CLIENT_ID` / `DATABRICKS_CLIENT_SECRET`, which `db.py` exchanges for a short-lived
+OAuth JWT (`client_credentials` grant) and uses as the Lakebase connection password —
+no personal access token is ever stored.
 
 | Function | Purpose |
 |---|---|
-| `get_conn()` | Returns psycopg2 connection with `RealDictCursor` |
 | `get_all_tickets(status_filter)` | All tickets, optional status filter |
-| `get_ticket_by_id(ticket_id)` | Single ticket dict |
-| `get_messages(ticket_id)` | All messages for a ticket (oldest first) |
+| `get_ticket_by_id(id)` | Single ticket dict |
+| `get_messages(ticket_id)` | All messages for a ticket, oldest first |
 | `get_stats()` | Count by status + total |
 | `create_ticket(title, created_by, priority, category)` | Insert + return new `ticket_id` |
-| `add_message(ticket_id, message_text, author)` | Insert message |
+| `add_message(ticket_id, text, author)` | Insert message |
 | `update_status(ticket_id, new_status)` | Update ticket status |
 | `delete_ticket(ticket_id)` | Delete with cascade |
 
-Built `app/requirements.txt`:
-```
-streamlit>=1.35.0
-psycopg2-binary>=2.9.9
-pandas>=2.0.0
-```
+---
+
+## Phase 3 — Application UI (`app/app.py`)
+
+Three-tab **Gradio** interface styled as a corporate helpdesk portal (light slate/indigo palette,
+Inter typeface, sticky sidebar dashboard):
+
+- **All Tickets** — filterable table, live message counts
+- **View & Update** — formatted ticket detail card, message thread, status update, guarded delete
+- **New Ticket** — validated creation form
 
 ---
 
-## 🚀 Phase 3 — Streamlit Application *(in progress)*
+## Phase 4 — Databricks App Deployment
 
-**Planned UI:**
+- App: `support-ticketing`, source: this GitHub repo, path `app/`
+- Entrypoint set via `app.yml`: `python app.py`
+- `LAKEBASE_CONN` wired as a secret resource
+- App's auto-generated service principal granted a Lakebase role on the `production` branch
+- **Live URL:** https://support-ticketing-7474654640109575.aws.databricksapps.com
 
-**Sidebar:**
-- Status filter: `All / open / in_progress / resolved`
-- Stats panel: metric cards (open, in progress, resolved, total)
-- New Ticket button
-
-**Main panel — Ticket List:**
-- Filterable table of all tickets
-- Click any ticket → Ticket Detail view
-
-**Main panel — Ticket Detail:**
-- Title, status badge, priority, category, created by / at
-- Status update dropdown + Update button
-- Delete ticket with confirmation
-- Full message thread (chronological)
-- Add message text area + Send button
-
-**Main panel — Create Ticket form:**
-- Title (required), Priority (dropdown), Category (text), Created By (required)
-- Validates inputs before writing to Lakebase
+### Smoke test — all passing
+- [x] Existing tickets load from Lakebase
+- [x] New ticket can be created
+- [x] Message can be added
+- [x] Status can be updated (persists after refresh)
+- [x] Filter by status works
+- [x] Delete requires confirmation checkbox
 
 ---
 
-## 🚀 Phase 4 — Databricks App Deployment *(pending)*
-
-1. Databricks workspace → **Apps** → **Create App** → **Custom App**
-2. Connect to GitHub repo or upload `app/` folder
-3. Set env var `LAKEBASE_CONN` in App config (never hardcoded)
-4. Entrypoint: `streamlit run app.py --server.port $PORT`
-5. Smoke test all operations
-
----
-
-## 🚀 Phase 5 — Bonus Features *(pending)*
+## Bonus Features
 
 | Feature | Status |
 |---|---|
-| Priority + category columns | ✅ Already in schema and `db.py` |
-| Filter by status | ⏳ Phase 3 |
-| Input validation + error messages | ⏳ Phase 3 |
-| Ticket statistics panel | ⏳ Phase 3 |
-| Delete with confirmation | ⏳ Phase 3 |
-| Improved visual design | ⏳ Phase 3 |
+| Priority + category | ✅ In schema, forms, and table |
+| Filter by status | ✅ Dropdown on All Tickets tab |
+| Input validation + error messages | ✅ On create/update/message actions |
+| Ticket statistics | ✅ Live sidebar dashboard |
+| Delete with confirmation | ✅ Explicit checkbox required |
+| Improved visual design | ✅ Corporate helpdesk-style UI |
 
 ---
 
-## 🔐 Security Notes
+## Security Notes
 
-- `LAKEBASE_CONN` is **never** committed to this repo
-- PAT is injected only via Databricks App environment variable config
-- `.gitignore` excludes `.env`, `*.pem`, `__pycache__/`, `secrets.toml`
-- Auth method: OAuth (Databricks identity token)
+- `LAKEBASE_CONN` / Lakebase credentials never committed to this repo
+- Auth uses the Databricks App's own service-principal OAuth identity, not a static PAT
+- `.gitignore` excludes `.env`, `*.pem`, `__pycache__/`, `.DS_Store`
 
 ---
 
-## 🛠️ Local Development
+## Local Development
 
 ```bash
-# Clone the repo
-git clone https://github.com/<your-username>/lakebase-support-ticketing.git
+git clone https://github.com/demonjd2026-afk/lakebase-support-ticketing.git
 cd lakebase-support-ticketing
 
-# Install dependencies
 pip install -r app/requirements.txt
 
-# Set connection string (local only — never commit this)
-export LAKEBASE_CONN="postgresql://token:<PAT>@dbc-291b687e-da89.cloud.databricks.com:5432/databricks_postgres"
+export LAKEBASE_CONN="postgresql://token:<PAT>@<lakebase-host>:5432/databricks_postgres?sslmode=require"
 
-# Test the DB layer
-python app/db.py
-
-# Run the app
-streamlit run app/app.py
+python app/db.py     # quick connection test
+python app/app.py    # run the app locally
 ```
 
 ---
 
-## 📋 Submission Checklist
-
-- [ ] Databricks App URL
-- [ ] Source code zipped
-- [ ] Screenshot: deployed application
-- [ ] Screenshot: Lakebase tables with sample records ✅ captured
-- [ ] Reflection (3–5 sentences)
-
----
-
-## 🙋 Reflection *(fill in after Phase 4)*
+## Reflection
 
 **What was the most difficult part?**
-_(e.g., finding the Lakebase connection string — it is exposed via OAuth token not a traditional password, requiring a Databricks PAT as the password in the psycopg2 connection string)_
+Getting the Databricks App to authenticate against Lakebase. Lakebase requires a JWT OAuth token,
+not a PAT — the working path was to have the app's own service principal exchange its injected
+`DATABRICKS_CLIENT_ID`/`DATABRICKS_CLIENT_SECRET` for a JWT via the OIDC `client_credentials`
+grant, and to grant that principal a Lakebase role on the branch.
 
 **How is Lakebase different from a traditional analytics table?**
-_(Lakebase gives you row-level ACID transactions and millisecond read/write latency via standard Postgres protocol. A Delta table requires file-level commits and is built for bulk analytical workloads — not suitable for per-row operational writes from a live app.)_
+Lakebase gives row-level ACID transactions and millisecond read/write latency over the standard
+Postgres protocol — built for an app's live create/update/delete operations. A Delta table is
+built for large, append-oriented batch writes and file-level commits, not single-row OLTP traffic.
 
 **What feature would you add next?**
-_(AI-powered ticket summarization and auto-routing using Databricks Model Serving + DBRX or Claude)_
+An AI agent layer using Databricks Model Serving to auto-triage new tickets, draft reply
+messages, and summarize long threads on load.
 
 ---
 
