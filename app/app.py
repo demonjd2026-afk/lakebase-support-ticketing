@@ -155,220 +155,227 @@ CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 *, body, .gradio-container, button, input, textarea, select, table, span, div, p, label {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-    font-feature-settings: 'cv02','cv03','cv04','cv11' !important;
 }
 
 /* ═══ FORCE LIGHT ═══ */
 *, *::before, *::after { color-scheme: light !important; }
-body, .gradio-container, .app, .main, .wrap, .contain, .block, .form,
-.gap, .styler, .container, [class*="svelte"] {
-    background: transparent !important; border-color: #e5e7eb !important;
+body, .gradio-container, .app, .main, .wrap, .contain, .gap, .styler, .container {
+    background: transparent !important;
 }
 
-/* ═══ LAYOUT + BACKGROUND ═══ */
+/* ═══ LAYOUT ═══ */
 .gradio-container {
     max-width: 1340px !important; margin: 0 auto !important;
     padding: 0 24px 24px 24px !important;
-    background: #f4f6fa !important; color: #111827 !important;
+    background: #f1f5f9 !important; color: #0f172a !important;
 }
-body { background: #f4f6fa !important; }
+body { background: #f1f5f9 !important; }
 footer { display: none !important; }
-p, span, div, label, h1, h2, h3, h4, h5, h6, li, td, th { color: #374151 !important; }
+p, span, div, label, h1, h2, h3, h4, h5, h6, li { color: #334155 !important; }
 
 /* ═══ TOP BAR ═══ */
 .topbar {
-    background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important;
+    background: #ffffff !important; border-bottom: 1px solid #e2e8f0 !important;
     padding: 14px 22px; margin: 0 -24px 18px -24px;
     display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
 }
 .tb-l { display: flex; align-items: center; gap: 11px; }
-.tb-i { width: 32px; height: 32px; border-radius: 8px; background: #eef2ff !important;
-        display: flex; align-items: center; justify-content: center; font-size: 16px; }
-.tb-t { font-size: 15px !important; font-weight: 650 !important; color: #111827 !important; }
-.tb-s { font-size: 11.5px !important; color: #9ca3af !important; margin-top: 1px; }
+.tb-i { width: 34px; height: 34px; border-radius: 9px; background: #eef2ff !important;
+        display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.tb-t { font-size: 15.5px !important; font-weight: 650 !important; color: #0f172a !important; }
+.tb-s { font-size: 11.5px !important; color: #94a3b8 !important; margin-top: 1px; }
 .tb-b { background: #eef2ff !important; color: #4338ca !important; border: 1px solid #e0e7ff !important;
         padding: 4px 11px; border-radius: 6px; font-size: 10.5px !important; font-weight: 600 !important; }
-.tb-m { font-size: 10.5px !important; color: #9ca3af !important; margin-top: 5px; text-align: right; }
+.tb-m { font-size: 10.5px !important; color: #94a3b8 !important; margin-top: 5px; text-align: right; }
 
 /* ═══ SIDEBAR ═══ */
-.sb { background: #ffffff !important; border: 1px solid #e5e7eb !important; border-radius: 10px;
-      padding: 15px 13px; position: sticky; top: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-.sb-h { font-size: 10px !important; font-weight: 700 !important; color: #9ca3af !important;
+.sb { background: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 12px;
+      padding: 16px 14px; position: sticky; top: 13px; box-shadow: 0 1px 3px rgba(15,23,42,0.05); }
+.sb-h { font-size: 10px !important; font-weight: 700 !important; color: #94a3b8 !important;
         text-transform: uppercase; letter-spacing: 0.08em;
-        padding-bottom: 9px; margin-bottom: 11px; border-bottom: 1px solid #f3f4f6 !important; }
-.sb-c { display: block; padding: 10px 12px; margin-bottom: 6px; border-radius: 8px;
-        background: #f9fafb !important; border-left: 3px solid #9ca3af; }
+        padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9 !important; }
+.sb-c { display: block; padding: 11px 13px; margin-bottom: 7px; border-radius: 9px;
+        background: #f8fafc !important; border-left: 3px solid #94a3b8; }
 .sb-o { border-left-color: #f59e0b !important; background: #fffbeb !important; }
 .sb-p { border-left-color: #3b82f6 !important; background: #eff6ff !important; }
 .sb-r { border-left-color: #10b981 !important; background: #ecfdf5 !important; }
-.sb-n { display: block; font-size: 22px !important; font-weight: 700 !important;
-        color: #111827 !important; line-height: 1.15; }
-.sb-l { display: block; font-size: 11px !important; color: #6b7280 !important;
+.sb-n { display: block; font-size: 23px !important; font-weight: 700 !important;
+        color: #0f172a !important; line-height: 1.15; }
+.sb-l { display: block; font-size: 11px !important; color: #64748b !important;
         margin-top: 2px; font-weight: 500 !important; }
-.sb-f { margin-top: 13px; padding-top: 11px; border-top: 1px solid #f3f4f6 !important; }
-.sb-fk { font-size: 9px !important; color: #9ca3af !important; text-transform: uppercase;
+.sb-f { margin-top: 14px; padding-top: 12px; border-top: 1px solid #f1f5f9 !important; }
+.sb-fk { font-size: 9px !important; color: #94a3b8 !important; text-transform: uppercase;
          letter-spacing: 0.08em; font-weight: 700 !important; }
-.sb-fv { font-size: 12px !important; color: #374151 !important; font-weight: 600 !important; margin-top: 3px; }
-.sb-fs { font-size: 10px !important; color: #9ca3af !important; margin-top: 1px; }
+.sb-fv { font-size: 12px !important; color: #334155 !important; font-weight: 600 !important; margin-top: 3px; }
+.sb-fs { font-size: 10px !important; color: #94a3b8 !important; margin-top: 1px; }
 .sb-e  { color: #dc2626 !important; font-size: 11px !important; }
 
-/* ═══ TABS — active bg + hover bg ═══ */
-.tab-nav { border-bottom: 1px solid #e5e7eb !important; margin-bottom: 16px !important;
+/* ═══ TABS ═══ */
+.tab-nav { border-bottom: 1px solid #e2e8f0 !important; margin-bottom: 16px !important;
            gap: 4px !important; background: transparent !important; }
 .tab-nav button {
-    background: transparent !important; color: #6b7280 !important;
+    background: transparent !important; color: #64748b !important;
     border: 1px solid transparent !important; border-bottom: none !important;
-    border-radius: 8px 8px 0 0 !important; font-size: 13px !important;
-    font-weight: 600 !important; padding: 10px 18px !important;
+    border-radius: 9px 9px 0 0 !important; font-size: 13px !important;
+    font-weight: 600 !important; padding: 11px 20px !important;
     margin-bottom: -1px !important; transition: all 0.15s !important;
 }
-.tab-nav button:hover {
-    background: #eef2ff !important; color: #4338ca !important;
-}
+.tab-nav button:hover { background: #e0e7ff !important; color: #4338ca !important; }
 .tab-nav button.selected {
     background: #ffffff !important; color: #4338ca !important;
-    border-color: #e5e7eb !important; border-bottom: 1px solid #ffffff !important;
-    box-shadow: 0 -1px 2px rgba(0,0,0,0.03) !important;
+    border-color: #e2e8f0 !important; border-bottom: 1px solid #ffffff !important;
 }
 
 /* ═══ PANELS ═══ */
-.pnl, .pnl > *, .pnl .block, .pnl .form {
-    background: #ffffff !important; border-radius: 10px !important;
-}
-.pnl { border: 1px solid #e5e7eb !important; padding: 16px !important;
-       margin-bottom: 12px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important; }
-.pnl-d, .pnl-d > *, .pnl-d .block, .pnl-d .form {
-    background: #fef2f2 !important; border-radius: 10px !important;
-}
-.pnl-d { border: 1px solid #fecaca !important; padding: 14px !important; margin-top: 10px !important; }
-
-.ph, .ph * { font-size: 10.5px !important; font-weight: 700 !important; color: #9ca3af !important;
+.pnl { background: #ffffff !important; border: 1px solid #e2e8f0 !important;
+       border-radius: 12px !important; padding: 18px !important;
+       margin-bottom: 14px !important; box-shadow: 0 1px 3px rgba(15,23,42,0.04) !important; }
+.pnl-d { background: #fef2f2 !important; border: 1px solid #fecaca !important;
+         border-radius: 12px !important; padding: 16px !important; margin-top: 12px !important; }
+.ph, .ph * { font-size: 10.5px !important; font-weight: 700 !important; color: #94a3b8 !important;
              text-transform: uppercase !important; letter-spacing: 0.08em !important;
              background: transparent !important; }
-.ph { margin: 0 0 11px 0 !important; padding-bottom: 8px !important;
-      border-bottom: 1px solid #f3f4f6 !important; }
-.hint, .hint * { font-size: 12.5px !important; color: #6b7280 !important;
-                 background: transparent !important; margin: 0 0 12px 0 !important; }
+.ph { margin: 0 0 13px 0 !important; padding-bottom: 9px !important;
+      border-bottom: 1px solid #f1f5f9 !important; }
+.hint, .hint * { font-size: 12.5px !important; color: #64748b !important;
+                 background: transparent !important; margin: 0 0 14px 0 !important; }
 
-/* ═══ TICKET DETAILS (HTML render) ═══ */
+/* ═══ TICKET DETAILS ═══ */
 .td { padding: 2px 0; }
 .td-title-row { display: flex; align-items: center; justify-content: space-between;
-                gap: 12px; padding-bottom: 12px; margin-bottom: 12px;
-                border-bottom: 1px solid #f3f4f6; }
-.td-title { font-size: 15px !important; font-weight: 650 !important; color: #111827 !important; }
-.td-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-.td-f { }
-.td-k { font-size: 10px !important; font-weight: 700 !important; color: #9ca3af !important;
-        text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
-.td-v { font-size: 13px !important; color: #374151 !important; font-weight: 500 !important; }
-.td-empty { font-size: 13px !important; color: #9ca3af !important;
+                gap: 12px; padding-bottom: 13px; margin-bottom: 13px;
+                border-bottom: 1px solid #f1f5f9; }
+.td-title { font-size: 15px !important; font-weight: 650 !important; color: #0f172a !important; }
+.td-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.td-k { font-size: 10px !important; font-weight: 700 !important; color: #94a3b8 !important;
+        text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
+.td-v { font-size: 13px !important; color: #334155 !important; font-weight: 500 !important; }
+.td-empty { font-size: 13px !important; color: #94a3b8 !important;
             font-style: italic; padding: 14px 0; }
 
 /* ═══ CHIPS ═══ */
-.chip { display: inline-block; padding: 3px 10px; border-radius: 20px;
+.chip { display: inline-block; padding: 4px 11px; border-radius: 20px;
         font-size: 11px !important; font-weight: 600 !important; white-space: nowrap; }
 .chip-open        { background: #fef3c7 !important; color: #92400e !important; }
 .chip-in_progress { background: #dbeafe !important; color: #1e40af !important; }
 .chip-resolved    { background: #d1fae5 !important; color: #065f46 !important; }
 .chip-p-high   { background: #fee2e2 !important; color: #991b1b !important; }
-.chip-p-medium { background: #fed7aa !important; color: #9a3412 !important; }
+.chip-p-medium { background: #ffedd5 !important; color: #9a3412 !important; }
 .chip-p-low    { background: #d1fae5 !important; color: #065f46 !important; }
 
-/* ═══ INPUTS ═══ */
-input[type="text"], input[type="number"], textarea, select {
-    background: #ffffff !important; border: 1px solid #d1d5db !important;
-    border-radius: 7px !important; color: #111827 !important;
-    font-size: 13px !important; padding: 9px 12px !important;
+/* ═══ TEXT INPUTS ONLY ═══ */
+textarea, input[type="text"]:not([role="listbox"]), input[type="number"] {
+    background: #ffffff !important; border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important; color: #0f172a !important;
+    font-size: 13px !important; padding: 10px 12px !important;
 }
-input:focus, textarea:focus, select:focus {
+textarea:focus, input:focus {
     border-color: #818cf8 !important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.10) !important; outline: none !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important; outline: none !important;
 }
-input::placeholder, textarea::placeholder { color: #9ca3af !important; }
-label, label span { color: #374151 !important; font-size: 12px !important;
-    font-weight: 600 !important; text-transform: none !important;
-    letter-spacing: 0 !important; background: transparent !important; }
+input::placeholder, textarea::placeholder { color: #94a3b8 !important; }
+label, label span { color: #334155 !important; font-size: 12.5px !important;
+    font-weight: 600 !important; background: transparent !important; }
 
-/* ═══ DROPDOWN — fix overlap ═══ */
-ul.options, .options, [class*="dropdown"] ul, [role="listbox"] {
-    background: #ffffff !important; border: 1px solid #d1d5db !important;
-    border-radius: 8px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.14) !important;
-    z-index: 9999 !important; position: absolute !important;
-    max-height: 240px !important; overflow-y: auto !important;
-    padding: 4px !important; margin-top: 4px !important;
+/* ═══ DROPDOWNS — let Gradio render, just theme it ═══ */
+.gradio-dropdown, [class*="dropdown"] { position: relative !important; }
+.gradio-dropdown input, [class*="dropdown"] input {
+    background: #ffffff !important; border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important; color: #0f172a !important;
+    font-size: 13px !important; padding: 10px 12px !important;
+    height: auto !important; min-height: 42px !important; cursor: pointer !important;
 }
-ul.options li, .options li, [role="option"] {
-    background: #ffffff !important; color: #374151 !important;
-    font-size: 13px !important; padding: 8px 12px !important;
-    border-radius: 6px !important; cursor: pointer !important;
+ul.options, [class*="options"] {
+    background: #ffffff !important; border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important; box-shadow: 0 10px 30px rgba(15,23,42,0.16) !important;
+    z-index: 99999 !important; max-height: 220px !important; overflow-y: auto !important;
+    padding: 5px !important; margin-top: 5px !important;
 }
-ul.options li:hover, .options li:hover, [role="option"]:hover {
+ul.options li, [class*="options"] li {
+    background: #ffffff !important; color: #334155 !important;
+    font-size: 13px !important; padding: 9px 12px !important;
+    border-radius: 6px !important; cursor: pointer !important; list-style: none !important;
+}
+ul.options li:hover, [class*="options"] li:hover {
     background: #eef2ff !important; color: #4338ca !important;
 }
-ul.options li.selected, [role="option"][aria-selected="true"] {
-    background: #eef2ff !important; color: #4338ca !important; font-weight: 600 !important;
+ul.options li.selected, [class*="options"] li.selected {
+    background: #e0e7ff !important; color: #4338ca !important; font-weight: 600 !important;
 }
 
-/* ═══ FILTER ROW — equal heights ═══ */
-.filter-row { align-items: flex-end !important; }
-.filter-row > div { margin-bottom: 0 !important; }
-.filter-row button {
+/* ═══ EQUAL HEIGHT ROW ═══ */
+.eq-row { align-items: flex-end !important; gap: 12px !important; }
+.eq-row > * { margin-bottom: 0 !important; }
+.eq-row button {
     height: 42px !important; min-height: 42px !important; max-height: 42px !important;
-    line-height: 42px !important; margin-bottom: 0 !important;
+    line-height: 42px !important; margin-bottom: 0 !important; width: 100% !important;
 }
 
 /* ═══ BUTTONS ═══ */
 button.primary, button.secondary, button.stop {
-    border-radius: 7px !important; font-size: 13px !important; font-weight: 600 !important;
-    padding: 0 18px !important; height: 40px !important; min-height: 40px !important;
-    max-height: 40px !important; line-height: 40px !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; transition: all 0.15s !important;
+    border-radius: 8px !important; font-size: 13px !important; font-weight: 600 !important;
+    padding: 0 20px !important; height: 42px !important; min-height: 42px !important;
+    max-height: 42px !important; line-height: 42px !important;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.06) !important; transition: all 0.15s !important;
 }
 button.primary { background: #4f46e5 !important; color: #fff !important; border: none !important; }
 button.primary:hover { background: #4338ca !important; }
 button.primary span { color: #fff !important; }
-button.secondary { background: #fff !important; color: #374151 !important;
-                   border: 1px solid #d1d5db !important; }
-button.secondary:hover { background: #f9fafb !important; border-color: #9ca3af !important; }
-button.secondary span { color: #374151 !important; }
+button.secondary { background: #fff !important; color: #334155 !important;
+                   border: 1px solid #cbd5e1 !important; }
+button.secondary:hover { background: #f8fafc !important; border-color: #94a3b8 !important; }
+button.secondary span { color: #334155 !important; }
 button.stop { background: #dc2626 !important; color: #fff !important; border: none !important; }
 button.stop:hover { background: #b91c1c !important; }
 button.stop span { color: #fff !important; }
 
-/* ═══ DATAFRAME ═══ */
-table, table th, table td { background: #fff !important; color: #374151 !important; }
-table th { background: #f9fafb !important; color: #6b7280 !important;
-           font-size: 11px !important; font-weight: 600 !important; }
-table td { font-size: 12.5px !important; border-color: #f3f4f6 !important; }
-.table-wrap, [class*="table"] { overflow: visible !important; }
+/* ═══ TABLE ═══ */
+table { border-collapse: collapse !important; width: 100% !important;
+        background: #ffffff !important; border-radius: 10px !important; overflow: hidden !important; }
+table thead th {
+    background: #f1f5f9 !important; color: #475569 !important;
+    font-size: 11px !important; font-weight: 700 !important;
+    text-transform: uppercase !important; letter-spacing: 0.05em !important;
+    padding: 12px 14px !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+    border-right: 1px solid #e2e8f0 !important;
+}
+table tbody td {
+    background: #ffffff !important; color: #334155 !important;
+    font-size: 12.5px !important; padding: 11px 14px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-right: 1px solid #f1f5f9 !important;
+}
+table tbody tr:nth-child(even) td { background: #f8fafc !important; }
+table tbody tr:hover td { background: #eef2ff !important; }
 
 /* ═══ MESSAGE THREAD ═══ */
-.msg, .msg * { background: transparent !important; }
-.msg { background: #f9fafb !important; border: 1px solid #e5e7eb !important;
-       border-radius: 8px; padding: 14px 16px; min-height: 80px;
-       font-size: 12.5px !important; line-height: 1.65; max-height: 300px;
-       overflow-y: auto; color: #4b5563 !important; }
-.msg strong { color: #111827 !important; font-weight: 600 !important; }
-.msg code { background: #eef2ff !important; padding: 1px 6px; border-radius: 4px;
+.msg { background: #f8fafc !important; border: 1px solid #e2e8f0 !important;
+       border-radius: 10px; padding: 16px 18px; min-height: 80px;
+       font-size: 12.5px !important; line-height: 1.7; max-height: 300px;
+       overflow-y: auto; color: #475569 !important; }
+.msg strong { color: #0f172a !important; font-weight: 600 !important; }
+.msg code { background: #eef2ff !important; padding: 2px 7px; border-radius: 5px;
             font-size: 10.5px !important; color: #4338ca !important; }
-.msg hr { border: none; border-top: 1px solid #e5e7eb; margin: 10px 0; }
+.msg hr { border: none; border-top: 1px solid #e2e8f0; margin: 12px 0; }
 
 /* ═══ FEEDBACK ═══ */
-.fb, .fb * { font-size: 13px !important; color: #374151 !important;
+.fb, .fb * { font-size: 13px !important; color: #334155 !important;
              font-weight: 500 !important; background: transparent !important; }
-.fb { padding: 6px 0 !important; min-height: 24px !important; }
+.fb { padding: 8px 0 !important; min-height: 24px !important; }
 
-input[type="checkbox"] { accent-color: #4f46e5 !important; }
+input[type="checkbox"] { accent-color: #4f46e5 !important; width: 16px !important; height: 16px !important; }
 
 /* ═══ FOOTER ═══ */
-.ft, .ft * { text-align: center; color: #9ca3af !important; font-size: 11px !important;
+.ft, .ft * { text-align: center; color: #94a3b8 !important; font-size: 11px !important;
              background: transparent !important; }
-.ft { padding: 14px; border-top: 1px solid #e5e7eb; margin-top: 18px; }
+.ft { padding: 16px; border-top: 1px solid #e2e8f0; margin-top: 20px; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 4px; }
-::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 """
 
 with gr.Blocks(
@@ -403,9 +410,9 @@ with gr.Blocks(
 
             with gr.Tab("All Tickets"):
                 gr.Markdown("Browse and filter every ticket in the support queue.", elem_classes=["hint"])
-                with gr.Row(equal_height=True, elem_classes=["filter-row"]):
+                with gr.Row(equal_height=True, elem_classes=["eq-row"]):
                     filter_dd   = gr.Dropdown(choices=FILTER_OPTIONS, value="All",
-                                              label="Filter by status", scale=5)
+                                              label="Filter by status", scale=4)
                     refresh_btn = gr.Button("Refresh", variant="secondary", scale=1)
 
                 ticket_table = gr.Dataframe(
@@ -421,8 +428,8 @@ with gr.Blocks(
                 gr.Markdown("Load a ticket by ID to see its details, history, and take action.",
                             elem_classes=["hint"])
 
-                with gr.Row(equal_height=True, elem_classes=["filter-row"]):
-                    ticket_id_input = gr.Number(label="Ticket ID", precision=0, scale=5)
+                with gr.Row(equal_height=True, elem_classes=["eq-row"]):
+                    ticket_id_input = gr.Number(label="Ticket ID", precision=0, scale=4)
                     load_btn = gr.Button("Load ticket", variant="primary", scale=1)
 
                 with gr.Group(elem_classes=["pnl"]):
