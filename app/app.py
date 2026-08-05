@@ -70,8 +70,8 @@ def on_ticket_select(ticket_id_str):
 def on_filter_change(f): return load_ticket_table(f)
 
 def on_create_ticket(title, priority, category, created_by):
-    if not title.strip(): return "❌ Title is required.", load_ticket_table(), load_stats()
-    if not created_by.strip(): return "❌ Name is required.", load_ticket_table(), load_stats()
+    if not title.strip():      return "❌ Title is required.", load_ticket_table(), load_stats()
+    if not created_by.strip(): return "❌ Name is required.",  load_ticket_table(), load_stats()
     try:
         new_id = create_ticket(title.strip(), created_by.strip(), priority, category.strip() or None)
         return f"✅ Ticket **#{new_id}** created successfully!", load_ticket_table(), load_stats()
@@ -79,9 +79,9 @@ def on_create_ticket(title, priority, category, created_by):
         return f"❌ {e}", load_ticket_table(), load_stats()
 
 def on_add_message(ticket_id, author, text):
-    if not ticket_id: return "❌ No ticket loaded.", ""
-    if not author.strip(): return "❌ Name required.", load_messages(ticket_id)
-    if not text.strip():   return "❌ Message required.", load_messages(ticket_id)
+    if not ticket_id:          return "❌ No ticket loaded.", ""
+    if not author.strip():     return "❌ Name required.", load_messages(ticket_id)
+    if not text.strip():       return "❌ Message required.", load_messages(ticket_id)
     try:
         add_message(int(ticket_id), text.strip(), author.strip())
         return "✅ Message sent!", load_messages(ticket_id)
@@ -96,8 +96,9 @@ def on_update_status(ticket_id, new_status):
     except Exception as e:
         return f"❌ {e}", ""
 
-def on_delete_ticket(ticket_id):
-    if not ticket_id: return "❌ No ticket loaded.", load_ticket_table(), load_stats()
+def on_delete_ticket(ticket_id, confirmed):
+    if not ticket_id:  return "❌ No ticket loaded.", load_ticket_table(), load_stats()
+    if not confirmed:  return "⚠️ Please tick the confirmation checkbox before deleting.", load_ticket_table(), load_stats()
     try:
         delete_ticket(int(ticket_id))
         return f"✅ Ticket #{int(ticket_id)} deleted.", load_ticket_table(), load_stats()
@@ -105,87 +106,44 @@ def on_delete_ticket(ticket_id):
         return f"❌ {e}", load_ticket_table(), load_stats()
 
 CSS = """
-/* ── Base ── */
 .gradio-container { background:#0d1117 !important; font-family:'Inter',sans-serif !important; }
 footer { display:none !important; }
-
-/* ── Header card ── */
-.app-header {
-    background: linear-gradient(135deg,#161b27,#1a2236);
-    border:1px solid #21293d; border-radius:12px;
-    padding:20px 28px; margin-bottom:12px;
-}
+.app-header { background:linear-gradient(135deg,#161b27,#1a2236); border:1px solid #21293d;
+    border-radius:12px; padding:20px 28px; margin-bottom:12px; }
 .app-header h1 { font-size:22px; font-weight:700; color:#e2e8f0; margin:0 0 4px 0; }
 .app-header p  { color:#64748b; font-size:13px; margin:0; }
-
-/* ── Stats card ── */
 .stats-card { background:#161b27; border:1px solid #21293d; border-radius:10px; padding:14px 20px; margin-bottom:10px; }
-.stats-card table { width:auto !important; }
 .stats-card th, .stats-card td { padding:6px 20px !important; font-size:14px !important; text-align:center !important; }
-
-/* ── Tabs ── */
 .tab-nav { border-bottom:1px solid #21293d !important; }
 .tab-nav button { background:transparent !important; color:#64748b !important; border:none !important;
     border-bottom:2px solid transparent !important; border-radius:0 !important;
-    font-size:13px !important; font-weight:500 !important; padding:8px 16px !important; margin-right:4px !important; }
+    font-size:13px !important; font-weight:500 !important; padding:8px 16px !important; }
 .tab-nav button.selected { color:#3b82f6 !important; border-bottom-color:#3b82f6 !important; }
-.tab-nav button:hover { color:#94a3b8 !important; }
-
-/* ── Inputs ── */
-input, textarea, select {
-    background:#161b27 !important; border:1px solid #21293d !important;
-    border-radius:6px !important; color:#e2e8f0 !important; font-size:13px !important;
-}
+input, textarea, select { background:#161b27 !important; border:1px solid #21293d !important;
+    border-radius:6px !important; color:#e2e8f0 !important; font-size:13px !important; }
 input:focus, textarea:focus { border-color:#3b82f6 !important; box-shadow:0 0 0 2px rgba(59,130,246,0.15) !important; }
 label { color:#94a3b8 !important; font-size:11px !important; font-weight:600 !important;
     text-transform:uppercase !important; letter-spacing:0.05em !important; }
-
-/* ── Buttons — compact ── */
-button { font-size:13px !important; font-weight:500 !important;
-    padding:7px 16px !important; border-radius:6px !important;
-    min-width:0 !important; height:34px !important; line-height:1 !important; }
-button.primary { background:#2563eb !important; border:none !important; color:#fff !important; }
+button { font-size:13px !important; font-weight:500 !important; padding:7px 16px !important;
+    border-radius:6px !important; min-width:0 !important; height:34px !important; line-height:1 !important; }
+button.primary  { background:#2563eb !important; border:none !important; color:#fff !important; }
 button.primary:hover { background:#1d4ed8 !important; }
 button.secondary { background:#161b27 !important; border:1px solid #21293d !important; color:#94a3b8 !important; }
-button.secondary:hover { border-color:#3b82f6 !important; color:#e2e8f0 !important; }
-button.stop { background:#dc2626 !important; border:none !important; color:#fff !important; }
+button.stop    { background:#dc2626 !important; border:none !important; color:#fff !important; }
 button.stop:hover { background:#b91c1c !important; }
-
-/* ── Make Load Ticket button compact ── */
-#load-btn { max-width:160px !important; }
-#refresh-btn { max-width:120px !important; }
-
-/* ── Dataframe ── */
 .dataframe { border:1px solid #21293d !important; border-radius:8px !important; overflow:hidden !important; }
-.dataframe thead tr th { background:#161b27 !important; color:#64748b !important;
-    font-size:11px !important; font-weight:600 !important; text-transform:uppercase !important;
-    letter-spacing:0.05em !important; padding:8px 12px !important; border-bottom:1px solid #21293d !important; }
-.dataframe tbody tr td { background:#0d1117 !important; color:#e2e8f0 !important;
-    font-size:12px !important; padding:8px 12px !important;
-    border-bottom:1px solid #161b27 !important; }
+.dataframe thead tr th { background:#161b27 !important; color:#64748b !important; font-size:11px !important;
+    font-weight:600 !important; text-transform:uppercase !important; padding:8px 12px !important;
+    border-bottom:1px solid #21293d !important; }
+.dataframe tbody tr td { background:#0d1117 !important; color:#e2e8f0 !important; font-size:12px !important;
+    padding:8px 12px !important; border-bottom:1px solid #161b27 !important; }
 .dataframe tbody tr:hover td { background:#161b27 !important; }
-
-/* ── Message thread ── */
 .msg-thread { background:#161b27; border:1px solid #21293d; border-radius:8px;
     padding:14px 16px; min-height:80px; font-size:13px; line-height:1.6; }
-
-/* ── Section headings ── */
-.section-head { font-size:11px !important; font-weight:700 !important; color:#64748b !important;
-    text-transform:uppercase !important; letter-spacing:0.08em !important; margin:12px 0 6px 0 !important; }
-
-/* ── Ticket detail fields ── */
-.detail-row textarea { font-size:13px !important; padding:6px 10px !important; min-height:36px !important; }
-
-/* ── Action result ── */
-.action-result { font-size:13px !important; min-height:22px !important; }
-
-/* ── Footer ── */
-.app-footer { text-align:center; padding:12px; color:#374151; font-size:11px; margin-top:8px; }
-
-/* ── Form group ── */
 .form-group { background:#161b27; border:1px solid #21293d; border-radius:8px; padding:16px; }
-
-/* ── Scrollbar ── */
+.danger-zone { background:#1f1215; border:1px solid #4b1c1c; border-radius:8px; padding:12px 16px; margin-top:8px; }
+.action-result { font-size:13px !important; min-height:22px !important; }
+.app-footer { text-align:center; padding:12px; color:#374151; font-size:11px; margin-top:8px; }
 ::-webkit-scrollbar { width:5px; height:5px; }
 ::-webkit-scrollbar-track { background:#0d1117; }
 ::-webkit-scrollbar-thumb { background:#21293d; border-radius:3px; }
@@ -198,7 +156,6 @@ with gr.Blocks(
     css=CSS,
 ) as demo:
 
-    # Header
     gr.HTML("""<div class="app-header">
         <h1>🎫 Lakebase Support Ticketing System</h1>
         <p>Powered by Databricks Lakebase (managed Postgres) &nbsp;·&nbsp; Bootcamp Day 1 · 2026</p>
@@ -206,36 +163,33 @@ with gr.Blocks(
 
     stats_md = gr.Markdown(load_stats(), elem_classes=["stats-card"])
 
-    # ── TAB 1: All Tickets ──────────────────────────────────────
+    # ── TAB 1: All Tickets ──
     with gr.Tab("📋 All Tickets"):
         with gr.Row(equal_height=True):
             filter_dd   = gr.Dropdown(choices=FILTER_OPTIONS, value="All",
                                       label="Filter by status", scale=3)
-            refresh_btn = gr.Button("🔄 Refresh", scale=1, variant="secondary",
-                                    elem_id="refresh-btn")
+            refresh_btn = gr.Button("🔄 Refresh", scale=1, variant="secondary")
 
         ticket_table = gr.Dataframe(
             headers=["ID","Title","Status","Priority","Category","Created By","Created At","💬"],
-            value=load_ticket_table(),
-            interactive=False, wrap=True,
+            value=load_ticket_table(), interactive=False, wrap=True,
             column_widths=["4%","34%","11%","10%","10%","12%","13%","6%"],
         )
         filter_dd.change(fn=on_filter_change, inputs=filter_dd, outputs=ticket_table)
         refresh_btn.click(fn=lambda f: load_ticket_table(f), inputs=filter_dd, outputs=ticket_table)
 
-    # ── TAB 2: View & Update ────────────────────────────────────
+    # ── TAB 2: View & Update ──
     with gr.Tab("🔍 View & Update Ticket"):
         with gr.Row(equal_height=True):
             ticket_id_input = gr.Number(label="Ticket ID", precision=0, scale=2)
-            load_btn = gr.Button("Load Ticket →", variant="primary", scale=1,
-                                 elem_id="load-btn")
+            load_btn = gr.Button("Load Ticket →", variant="primary", scale=1)
 
         gr.Markdown("#### 📄 Ticket Details")
         with gr.Group(elem_classes=["form-group"]):
-            with gr.Row(elem_classes=["detail-row"]):
+            with gr.Row():
                 detail_title  = gr.Textbox(label="Title",  interactive=False, scale=4)
                 detail_status = gr.Textbox(label="Status", interactive=False, scale=1)
-            with gr.Row(elem_classes=["detail-row"]):
+            with gr.Row():
                 detail_priority   = gr.Textbox(label="Priority",   interactive=False, scale=1)
                 detail_category   = gr.Textbox(label="Category",   interactive=False, scale=1)
                 detail_created_by = gr.Textbox(label="Created By", interactive=False, scale=1)
@@ -246,24 +200,27 @@ with gr.Blocks(
                                      elem_classes=["msg-thread"])
 
         with gr.Row():
-            # Status update — left column
             with gr.Column(scale=2):
                 gr.Markdown("#### 🔄 Update Status")
                 with gr.Row():
                     new_status_dd     = gr.Dropdown(choices=STATUS_OPTIONS, value="open",
                                                     label="New status", scale=2)
                     update_status_btn = gr.Button("✅ Update", variant="primary", scale=1)
-                    delete_btn        = gr.Button("🗑️ Delete", variant="stop",    scale=1)
 
-            # Add message — right column
+                # Delete with confirmation
+                with gr.Group(elem_classes=["danger-zone"]):
+                    gr.Markdown("**🗑️ Danger Zone**")
+                    confirm_delete = gr.Checkbox(
+                        label="I confirm I want to permanently delete this ticket and all its messages",
+                        value=False
+                    )
+                    delete_btn = gr.Button("Delete Ticket", variant="stop")
+
             with gr.Column(scale=3):
                 gr.Markdown("#### ➕ Add Message")
-                with gr.Row():
-                    msg_author = gr.Textbox(label="Your name",
-                                            placeholder="e.g. jay.dolai", scale=1)
-                msg_text = gr.Textbox(label="Message", placeholder="Type your reply...",
-                                      lines=2, scale=1)
-                send_btn = gr.Button("📨 Send Message", variant="primary")
+                msg_author = gr.Textbox(label="Your name", placeholder="e.g. jay.dolai")
+                msg_text   = gr.Textbox(label="Message", placeholder="Type your reply...", lines=3)
+                send_btn   = gr.Button("📨 Send Message", variant="primary")
 
         action_result = gr.Markdown("", elem_classes=["action-result"])
 
@@ -272,24 +229,23 @@ with gr.Blocks(
                      detail_category, detail_created_by, detail_created_at, message_thread])
         update_status_btn.click(fn=on_update_status, inputs=[ticket_id_input, new_status_dd],
             outputs=[action_result, detail_status])
-        delete_btn.click(fn=on_delete_ticket, inputs=ticket_id_input,
+        delete_btn.click(fn=on_delete_ticket, inputs=[ticket_id_input, confirm_delete],
             outputs=[action_result, ticket_table, stats_md])
         send_btn.click(fn=on_add_message, inputs=[ticket_id_input, msg_author, msg_text],
             outputs=[action_result, message_thread])
 
-    # ── TAB 3: Create Ticket ────────────────────────────────────
+    # ── TAB 3: Create Ticket ──
     with gr.Tab("➕ Create New Ticket"):
         gr.Markdown("#### 🚀 Open a New Support Ticket")
+        gr.Markdown("*Fields marked with \* are required.*")
         with gr.Group(elem_classes=["form-group"]):
             new_title = gr.Textbox(label="Title *", placeholder="Describe the issue briefly...")
             with gr.Row():
                 new_priority = gr.Dropdown(choices=PRIORITY_OPTIONS, value="medium",
                                            label="Priority *", scale=1)
                 new_category = gr.Textbox(label="Category",
-                                          placeholder="e.g. infra, access, data, billing",
-                                          scale=2)
-            new_created_by = gr.Textbox(label="Your name / email *",
-                                        placeholder="e.g. jay.dolai")
+                                          placeholder="e.g. infra, access, data, billing", scale=2)
+            new_created_by = gr.Textbox(label="Your name / email *", placeholder="e.g. jay.dolai")
 
         create_btn    = gr.Button("🚀 Create Ticket", variant="primary")
         create_result = gr.Markdown("", elem_classes=["action-result"])
