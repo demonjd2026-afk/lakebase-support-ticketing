@@ -1,17 +1,59 @@
 # =============================================================
-# db.py — Lakebase connection + all query helpers
-# Reads LAKEBASE_CONN env var injected by Databricks Apps
+# db.py — Lakebase connection
+# Uses DATABRICKS_CLIENT_ID + DATABRICKS_CLIENT_SECRET
+# injected automatically by Databricks Apps runtime
 # =============================================================
 
 import os
 import psycopg2
 import psycopg2.extras
+import urllib.parse
+import requests as http_requests
+
+LAKEBASE_HOST = "ep-damp-rain-d8xddh4u.database.us-east-2.cloud.databricks.com"
+LAKEBASE_DB   = "databricks_postgres"
+
+
+def get_oauth_token():
+    """
+    Exchange DATABRICKS_CLIENT_ID + DATABRICKS_CLIENT_SECRET
+    for a short-lived OAuth JWT token accepted by Lakebase.
+    """
+    client_id     = os.environ["DATABRICKS_CLIENT_ID"]
+    client_secret = os.environ["DATABRICKS_CLIENT_SECRET"]
+    host          = os.environ.get("DATABRICKS_HOST",
+                    "dbc-291b687e-da89.cloud.databricks.com")
+
+    # Ensure host has no trailing slash and has https://
+    if not host.startswith("https://"):
+        host = f"https://{host}"
+
+    r = http_requests.post(
+        f"{host}/oidc/v1/token",
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        data={
+            "grant_type":    "client_credentials",
+            "client_id":     client_id,
+            "client_secret": client_secret,
+            "scope":         "all-apis",
+        },
+        timeout=30,
+    )
+
+    if r.status_code != 200:
+        raise RuntimeError(f"Token fetch failed: {r.status_code} {r.text}")
+
+    return r.json()["access_token"]
 
 
 def get_conn():
-    conn_str = os.environ.get("LAKEBASE_CONN")
-    if not conn_str:
-        raise EnvironmentError("LAKEBASE_CONN environment variable is not set.")
+    token = get_oauth_token()
+    user  = urllib.parse.quote("jayanthdolai07@gmail.com", safe="")
+    pw    = urllib.parse.quote(token, safe="")
+    conn_str = (
+        f"postgresql://{user}:{pw}"
+        f"@{LAKEBASE_HOST}/{LAKEBASE_DB}?sslmode=require"
+    )
     return psycopg2.connect(conn_str, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
@@ -21,19 +63,19 @@ def get_all_tickets(status_filter=None):
         cur = conn.cursor()
         if status_filter and status_filter != "All":
             cur.execute("""
-                SELECT ticket_id, title, status, priority, category, created_by,
-                       created_at,
+                SELECT t.ticket_id, t.title, t.status, t.priority, t.category,
+                       t.created_by, t.created_at,
                        (SELECT COUNT(*) FROM ticket_messages m
                         WHERE m.ticket_id = t.ticket_id) AS message_count
-                FROM tickets t WHERE status = %s ORDER BY created_at DESC
+                FROM tickets t WHERE t.status = %s ORDER BY t.created_at DESC
             """, (status_filter,))
         else:
             cur.execute("""
-                SELECT ticket_id, title, status, priority, category, created_by,
-                       created_at,
+                SELECT t.ticket_id, t.title, t.status, t.priority, t.category,
+                       t.created_by, t.created_at,
                        (SELECT COUNT(*) FROM ticket_messages m
                         WHERE m.ticket_id = t.ticket_id) AS message_count
-                FROM tickets t ORDER BY created_at DESC
+                FROM tickets t ORDER BY t.created_at DESC
             """)
         return [dict(row) for row in cur.fetchall()]
     finally:
