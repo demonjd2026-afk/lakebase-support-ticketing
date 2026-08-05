@@ -1,8 +1,0 @@
-command: ["streamlit", "run", "app.py", "--server.port", "8000", "--server.address", "0.0.0.0"]
-
-env:
-  - name: LAKEBASE_CONN
-    valueFrom:
-      secretRef:
-        scope: capstone
-        key: lakebase-conn

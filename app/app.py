@@ -1,18 +1,14 @@
 # =============================================================
 # app.py — Lakebase Support Ticketing System
-# Streamlit UI — Phase 3
+# Gradio UI — Phase 3 (revised)
 #
 # Run locally:
 #   export LAKEBASE_CONN="postgresql://token:<PAT>@dbc-291b687e-da89.cloud.databricks.com:5432/databricks_postgres"
-#   streamlit run app.py
-#
-# Deployed via Databricks Apps:
-#   LAKEBASE_CONN set as environment variable in App config
+#   python app.py
 # =============================================================
 
-import streamlit as st
-import pandas as pd
-from datetime import datetime
+import os
+import gradio as gr
 from db import (
     get_all_tickets,
     get_ticket_by_id,
@@ -24,115 +20,27 @@ from db import (
     delete_ticket,
 )
 
-# ─────────────────────────────────────────
-# PAGE CONFIG
-# ─────────────────────────────────────────
-
-st.set_page_config(
-    page_title="Support Ticketing System",
-    page_icon="🎫",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-# ─────────────────────────────────────────
-# CUSTOM CSS
-# ─────────────────────────────────────────
-
-st.markdown("""
-<style>
-    /* Status badges */
-    .badge-open        { background:#fff3cd; color:#856404; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600; }
-    .badge-in_progress { background:#cce5ff; color:#004085; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600; }
-    .badge-resolved    { background:#d4edda; color:#155724; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600; }
-
-    /* Priority badges */
-    .priority-high   { background:#f8d7da; color:#721c24; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
-    .priority-medium { background:#fff3cd; color:#856404; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
-    .priority-low    { background:#d4edda; color:#155724; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
-
-    /* Message bubbles */
-    .msg-bubble {
-        background: #f8f9fa;
-        border-left: 4px solid #0d6efd;
-        padding: 10px 14px;
-        border-radius: 0 8px 8px 0;
-        margin-bottom: 10px;
-    }
-    .msg-author { font-weight: 600; font-size: 13px; color: #0d6efd; }
-    .msg-time   { font-size: 11px; color: #6c757d; margin-left: 8px; }
-    .msg-text   { margin-top: 4px; font-size: 14px; }
-
-    /* Ticket card */
-    .ticket-header {
-        background: linear-gradient(90deg, #0d6efd11, #ffffff00);
-        border-left: 5px solid #0d6efd;
-        padding: 12px 16px;
-        border-radius: 0 8px 8px 0;
-        margin-bottom: 16px;
-    }
-
-    /* Section divider */
-    .section-label {
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #6c757d;
-        margin: 16px 0 8px 0;
-    }
-
-    /* Stat cards */
-    div[data-testid="metric-container"] {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 8px;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-
-# ─────────────────────────────────────────
-# SESSION STATE INIT
-# ─────────────────────────────────────────
-
-if "selected_ticket_id" not in st.session_state:
-    st.session_state.selected_ticket_id = None
-if "view" not in st.session_state:
-    st.session_state.view = "list"          # list | detail | create
-if "confirm_delete" not in st.session_state:
-    st.session_state.confirm_delete = False
-if "status_filter" not in st.session_state:
-    st.session_state.status_filter = "All"
-
+PORT = int(os.environ.get("DATABRICKS_APP_PORT", 8000))
 
 # ─────────────────────────────────────────
 # HELPERS
 # ─────────────────────────────────────────
 
-STATUS_OPTIONS  = ["open", "in_progress", "resolved"]
+STATUS_OPTIONS   = ["open", "in_progress", "resolved"]
 PRIORITY_OPTIONS = ["low", "medium", "high"]
-FILTER_OPTIONS  = ["All", "open", "in_progress", "resolved"]
+FILTER_OPTIONS   = ["All", "open", "in_progress", "resolved"]
 
-STATUS_LABELS = {
+STATUS_EMOJI = {
     "open":        "🟡 Open",
     "in_progress": "🔵 In Progress",
     "resolved":    "🟢 Resolved",
 }
 
-PRIORITY_LABELS = {
+PRIORITY_EMOJI = {
     "high":   "🔴 High",
     "medium": "🟠 Medium",
     "low":    "🟢 Low",
 }
-
-def badge_html(status):
-    label = status.replace("_", " ").title()
-    return f'<span class="badge-{status}">{label}</span>'
-
-def priority_html(priority):
-    return f'<span class="priority-{priority}">{priority.title()}</span>'
 
 def fmt_time(ts):
     if ts is None:
@@ -141,337 +49,272 @@ def fmt_time(ts):
         return ts.strftime("%d %b %Y, %H:%M")
     return str(ts)
 
-def go_list():
-    st.session_state.view = "list"
-    st.session_state.selected_ticket_id = None
-    st.session_state.confirm_delete = False
-
-def go_detail(ticket_id):
-    st.session_state.view = "detail"
-    st.session_state.selected_ticket_id = ticket_id
-    st.session_state.confirm_delete = False
-
-def go_create():
-    st.session_state.view = "create"
-    st.session_state.confirm_delete = False
-
 
 # ─────────────────────────────────────────
-# SIDEBAR
+# DATA FUNCTIONS
 # ─────────────────────────────────────────
 
-with st.sidebar:
-    st.title("🎫 Support Tickets")
-    st.divider()
-
-    # Stats panel
-    try:
-        stats = get_stats()
-        st.markdown('<p class="section-label">📊 Overview</p>', unsafe_allow_html=True)
-        col1, col2 = st.columns(2)
-        col1.metric("Total",       stats.get("total", 0))
-        col2.metric("🟡 Open",     stats.get("open", 0))
-        col3, col4 = st.columns(2)
-        col3.metric("🔵 In Progress", stats.get("in_progress", 0))
-        col4.metric("🟢 Resolved",    stats.get("resolved", 0))
-    except Exception as e:
-        st.error(f"Could not load stats: {e}")
-
-    st.divider()
-
-    # Status filter
-    st.markdown('<p class="section-label">🔍 Filter by status</p>', unsafe_allow_html=True)
-    selected_filter = st.selectbox(
-        label="Status filter",
-        options=FILTER_OPTIONS,
-        index=FILTER_OPTIONS.index(st.session_state.status_filter),
-        label_visibility="collapsed",
-    )
-    st.session_state.status_filter = selected_filter
-
-    st.divider()
-
-    # Navigation buttons
-    if st.button("➕ New Ticket", use_container_width=True, type="primary"):
-        go_create()
-
-    if st.session_state.view != "list":
-        if st.button("← Back to Ticket List", use_container_width=True):
-            go_list()
-
-    st.divider()
-    st.caption("Powered by Databricks Lakebase")
-    st.caption("Databricks Bootcamp · Day 1 · 2026")
-
-
-# ─────────────────────────────────────────
-# MAIN PANEL — TICKET LIST
-# ─────────────────────────────────────────
-
-def render_ticket_list():
-    st.title("🎫 Support Ticket Dashboard")
-
+def load_ticket_table(status_filter="All"):
     try:
         tickets = get_all_tickets(
-            status_filter=st.session_state.status_filter
-            if st.session_state.status_filter != "All" else None
+            status_filter=status_filter if status_filter != "All" else None
         )
+        rows = []
+        for t in tickets:
+            rows.append([
+                t["ticket_id"],
+                t["title"],
+                STATUS_EMOJI.get(t["status"], t["status"]),
+                PRIORITY_EMOJI.get(t["priority"], t["priority"]),
+                t.get("category") or "general",
+                t["created_by"],
+                fmt_time(t["created_at"]),
+                t.get("message_count", 0),
+            ])
+        return rows
     except Exception as e:
-        st.error(f"❌ Could not load tickets from Lakebase: {e}")
-        return
-
-    if not tickets:
-        st.info("No tickets found. Create one using '➕ New Ticket' in the sidebar.")
-        return
-
-    # Summary line
-    filter_label = (
-        f"showing **{st.session_state.status_filter}** tickets"
-        if st.session_state.status_filter != "All"
-        else "showing **all** tickets"
-    )
-    st.markdown(f"**{len(tickets)} ticket(s)** — {filter_label}")
-    st.divider()
-
-    # Ticket cards
-    for t in tickets:
-        with st.container():
-            col_main, col_btn = st.columns([8, 1])
-            with col_main:
-                st.markdown(
-                    f"**#{t['ticket_id']} — {t['title']}**  "
-                    f"&nbsp;&nbsp;{badge_html(t['status'])}"
-                    f"&nbsp;{priority_html(t['priority'])}",
-                    unsafe_allow_html=True,
-                )
-                st.caption(
-                    f"📁 {t.get('category') or 'general'} &nbsp;|&nbsp; "
-                    f"👤 {t['created_by']} &nbsp;|&nbsp; "
-                    f"🕐 {fmt_time(t['created_at'])} &nbsp;|&nbsp; "
-                    f"💬 {t.get('message_count', 0)} message(s)"
-                )
-            with col_btn:
-                if st.button("Open →", key=f"open_{t['ticket_id']}"):
-                    go_detail(t['ticket_id'])
-        st.divider()
+        return [[f"Error: {e}", "", "", "", "", "", "", ""]]
 
 
-# ─────────────────────────────────────────
-# MAIN PANEL — TICKET DETAIL
-# ─────────────────────────────────────────
-
-def render_ticket_detail():
-    ticket_id = st.session_state.selected_ticket_id
-
+def load_stats():
     try:
-        ticket = get_ticket_by_id(ticket_id)
-        messages = get_messages(ticket_id)
+        s = get_stats()
+        return (
+            f"📊 **Total:** {s.get('total',0)}  |  "
+            f"🟡 **Open:** {s.get('open',0)}  |  "
+            f"🔵 **In Progress:** {s.get('in_progress',0)}  |  "
+            f"🟢 **Resolved:** {s.get('resolved',0)}"
+        )
     except Exception as e:
-        st.error(f"❌ Could not load ticket: {e}")
-        return
+        return f"Could not load stats: {e}"
 
-    if not ticket:
-        st.error("Ticket not found.")
-        return
 
-    # ── Header ──────────────────────────
-    st.markdown(
-        f'<div class="ticket-header">'
-        f'<h2 style="margin:0">#{ticket["ticket_id"]} — {ticket["title"]}</h2>'
-        f'<p style="margin:6px 0 0 0">'
-        f'{badge_html(ticket["status"])} &nbsp; {priority_html(ticket["priority"])}'
-        f'</p></div>',
-        unsafe_allow_html=True,
+def load_ticket_detail(ticket_id):
+    try:
+        t = get_ticket_by_id(int(ticket_id))
+        if not t:
+            return "Not found", "unknown", "unknown", "general", "unknown", "unknown"
+        return (
+            f"#{t['ticket_id']} — {t['title']}",
+            t["status"],
+            t["priority"],
+            t.get("category") or "general",
+            t["created_by"],
+            fmt_time(t["created_at"]),
+        )
+    except Exception as e:
+        return f"Error: {e}", "", "", "", "", ""
+
+
+def load_messages(ticket_id):
+    try:
+        msgs = get_messages(int(ticket_id))
+        if not msgs:
+            return "_No messages yet. Add the first one below._"
+        lines = []
+        for m in msgs:
+            lines.append(
+                f"**👤 {m['author']}** — {fmt_time(m['created_at'])}\n\n"
+                f"{m['message_text']}\n\n---"
+            )
+        return "\n".join(lines)
+    except Exception as e:
+        return f"Error loading messages: {e}"
+
+
+# ─────────────────────────────────────────
+# ACTION FUNCTIONS
+# ─────────────────────────────────────────
+
+def on_filter_change(status_filter):
+    return load_ticket_table(status_filter)
+
+
+def on_create_ticket(title, priority, category, created_by):
+    errors = []
+    if not title.strip():
+        errors.append("Title is required.")
+    if not created_by.strip():
+        errors.append("Your name is required.")
+    if errors:
+        return "❌ " + " | ".join(errors), load_ticket_table(), load_stats()
+    try:
+        new_id = create_ticket(
+            title=title.strip(),
+            created_by=created_by.strip(),
+            priority=priority,
+            category=category.strip() or None,
+        )
+        return (
+            f"✅ Ticket #{new_id} created successfully!",
+            load_ticket_table(),
+            load_stats(),
+        )
+    except Exception as e:
+        return f"❌ Error: {e}", load_ticket_table(), load_stats()
+
+
+def on_add_message(ticket_id, author, message_text):
+    errors = []
+    if not ticket_id:
+        errors.append("No ticket selected.")
+    if not author.strip():
+        errors.append("Your name is required.")
+    if not message_text.strip():
+        errors.append("Message cannot be empty.")
+    if errors:
+        return "❌ " + " | ".join(errors), load_messages(ticket_id) if ticket_id else ""
+    try:
+        add_message(int(ticket_id), message_text.strip(), author.strip())
+        return "✅ Message sent!", load_messages(ticket_id)
+    except Exception as e:
+        return f"❌ Error: {e}", load_messages(ticket_id)
+
+
+def on_update_status(ticket_id, new_status):
+    if not ticket_id:
+        return "❌ No ticket selected.", ""
+    try:
+        update_status(int(ticket_id), new_status)
+        return f"✅ Status updated to **{new_status}**!", STATUS_EMOJI.get(new_status, new_status)
+    except Exception as e:
+        return f"❌ Error: {e}", ""
+
+
+def on_delete_ticket(ticket_id):
+    if not ticket_id:
+        return "❌ No ticket selected.", load_ticket_table(), load_stats()
+    try:
+        delete_ticket(int(ticket_id))
+        return (
+            f"✅ Ticket #{ticket_id} deleted.",
+            load_ticket_table(),
+            load_stats(),
+        )
+    except Exception as e:
+        return f"❌ Error: {e}", load_ticket_table(), load_stats()
+
+
+def on_ticket_select(ticket_id_str):
+    if not ticket_id_str:
+        return "", "", "", "", "", "", ""
+    try:
+        tid = int(ticket_id_str)
+        title, status, priority, category, created_by, created_at = load_ticket_detail(tid)
+        messages = load_messages(tid)
+        status_display = STATUS_EMOJI.get(status, status)
+        return title, status_display, priority, category, created_by, created_at, messages
+    except Exception as e:
+        return f"Error: {e}", "", "", "", "", "", ""
+
+
+# ─────────────────────────────────────────
+# GRADIO UI
+# ─────────────────────────────────────────
+
+with gr.Blocks(title="🎫 Support Ticketing System", theme=gr.themes.Soft()) as demo:
+
+    gr.Markdown("# 🎫 Lakebase Support Ticketing System")
+    gr.Markdown("*Powered by Databricks Lakebase (managed Postgres) · Bootcamp Day 1*")
+
+    stats_display = gr.Markdown(load_stats())
+
+    # ── TAB 1: All Tickets ───────────────
+    with gr.Tab("📋 All Tickets"):
+        with gr.Row():
+            filter_dd   = gr.Dropdown(choices=FILTER_OPTIONS, value="All", label="Filter by status", scale=1)
+            refresh_btn = gr.Button("🔄 Refresh", scale=1)
+
+        ticket_table = gr.Dataframe(
+            headers=["ID", "Title", "Status", "Priority", "Category", "Created By", "Created At", "Messages"],
+            value=load_ticket_table(),
+            interactive=False,
+            wrap=True,
+        )
+
+        filter_dd.change(fn=on_filter_change, inputs=filter_dd, outputs=ticket_table)
+        refresh_btn.click(fn=lambda f: load_ticket_table(f), inputs=filter_dd, outputs=ticket_table)
+
+    # ── TAB 2: View / Update Ticket ──────
+    with gr.Tab("🔍 View / Update Ticket"):
+        with gr.Row():
+            ticket_id_input = gr.Number(label="Enter Ticket ID", precision=0, scale=1)
+            load_btn        = gr.Button("Load Ticket →", variant="primary", scale=1)
+
+        with gr.Row():
+            detail_title  = gr.Textbox(label="Title", interactive=False, scale=3)
+            detail_status = gr.Textbox(label="Status", interactive=False, scale=1)
+
+        with gr.Row():
+            detail_priority   = gr.Textbox(label="Priority", interactive=False, scale=1)
+            detail_category   = gr.Textbox(label="Category", interactive=False, scale=1)
+            detail_created_by = gr.Textbox(label="Created By", interactive=False, scale=1)
+            detail_created_at = gr.Textbox(label="Created At", interactive=False, scale=1)
+
+        gr.Markdown("### 💬 Message Thread")
+        message_thread = gr.Markdown("_Load a ticket to see messages._")
+
+        gr.Markdown("### 🔄 Update Status")
+        with gr.Row():
+            new_status_dd     = gr.Dropdown(choices=STATUS_OPTIONS, value="open", label="New status", scale=2)
+            update_status_btn = gr.Button("✅ Update Status", variant="primary", scale=1)
+            delete_btn        = gr.Button("🗑️ Delete Ticket", variant="stop", scale=1)
+
+        gr.Markdown("### ➕ Add Message")
+        with gr.Row():
+            msg_author = gr.Textbox(label="Your name", placeholder="e.g. jay.dolai", scale=1)
+            msg_text   = gr.Textbox(label="Message", placeholder="Type your message...", scale=3)
+        send_btn = gr.Button("📨 Send Message", variant="primary")
+
+        action_result = gr.Markdown("")
+
+        load_btn.click(
+            fn=on_ticket_select,
+            inputs=ticket_id_input,
+            outputs=[detail_title, detail_status, detail_priority,
+                     detail_category, detail_created_by, detail_created_at, message_thread],
+        )
+        update_status_btn.click(
+            fn=on_update_status,
+            inputs=[ticket_id_input, new_status_dd],
+            outputs=[action_result, detail_status],
+        )
+        delete_btn.click(
+            fn=on_delete_ticket,
+            inputs=ticket_id_input,
+            outputs=[action_result, ticket_table, stats_display],
+        )
+        send_btn.click(
+            fn=on_add_message,
+            inputs=[ticket_id_input, msg_author, msg_text],
+            outputs=[action_result, message_thread],
+        )
+
+    # ── TAB 3: Create Ticket ─────────────
+    with gr.Tab("➕ Create Ticket"):
+        gr.Markdown("Fields marked * are required.")
+        new_title      = gr.Textbox(label="Title *", placeholder="Short description of the issue")
+        with gr.Row():
+            new_priority = gr.Dropdown(choices=PRIORITY_OPTIONS, value="medium", label="Priority *")
+            new_category = gr.Textbox(label="Category", placeholder="e.g. infra, access, data, billing")
+        new_created_by = gr.Textbox(label="Your name / email *", placeholder="e.g. jay.dolai")
+        create_btn     = gr.Button("🚀 Create Ticket", variant="primary")
+        create_result  = gr.Markdown("")
+
+        create_btn.click(
+            fn=on_create_ticket,
+            inputs=[new_title, new_priority, new_category, new_created_by],
+            outputs=[create_result, ticket_table, stats_display],
+        )
+
+
+# ─────────────────────────────────────────
+# LAUNCH
+# ─────────────────────────────────────────
+
+if __name__ == "__main__":
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=PORT,
+        show_error=True,
     )
-
-    # ── Metadata row ────────────────────
-    meta1, meta2, meta3 = st.columns(3)
-    meta1.markdown(f"**👤 Created by**  \n{ticket['created_by']}")
-    meta2.markdown(f"**📁 Category**  \n{ticket.get('category') or 'general'}")
-    meta3.markdown(f"**🕐 Created at**  \n{fmt_time(ticket['created_at'])}")
-
-    st.divider()
-
-    # ── Status update + Delete ──────────
-    col_status, col_spacer, col_delete = st.columns([3, 4, 2])
-
-    with col_status:
-        st.markdown('<p class="section-label">Update status</p>', unsafe_allow_html=True)
-        new_status = st.selectbox(
-            "Status",
-            options=STATUS_OPTIONS,
-            index=STATUS_OPTIONS.index(ticket["status"]),
-            label_visibility="collapsed",
-            key="status_select",
-        )
-        if st.button("✅ Update Status", type="primary"):
-            if new_status == ticket["status"]:
-                st.warning("Status is already set to that value.")
-            else:
-                try:
-                    update_status(ticket_id, new_status)
-                    st.success(f"Status updated to **{new_status}**!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"❌ Update failed: {e}")
-
-    with col_delete:
-        st.markdown('<p class="section-label">Danger zone</p>', unsafe_allow_html=True)
-        if not st.session_state.confirm_delete:
-            if st.button("🗑️ Delete Ticket", type="secondary"):
-                st.session_state.confirm_delete = True
-                st.rerun()
-        else:
-            st.warning("Are you sure? This cannot be undone.")
-            dcol1, dcol2 = st.columns(2)
-            with dcol1:
-                if st.button("Yes, delete", type="primary"):
-                    try:
-                        delete_ticket(ticket_id)
-                        st.success("Ticket deleted.")
-                        go_list()
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"❌ Delete failed: {e}")
-            with dcol2:
-                if st.button("Cancel"):
-                    st.session_state.confirm_delete = False
-                    st.rerun()
-
-    st.divider()
-
-    # ── Message thread ───────────────────
-    st.markdown('<p class="section-label">💬 Message thread</p>', unsafe_allow_html=True)
-
-    if not messages:
-        st.info("No messages yet. Add the first one below.")
-    else:
-        for msg in messages:
-            st.markdown(
-                f'<div class="msg-bubble">'
-                f'<span class="msg-author">👤 {msg["author"]}</span>'
-                f'<span class="msg-time">{fmt_time(msg["created_at"])}</span>'
-                f'<div class="msg-text">{msg["message_text"]}</div>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-
-    st.divider()
-
-    # ── Add message ──────────────────────
-    st.markdown('<p class="section-label">➕ Add a message</p>', unsafe_allow_html=True)
-
-    with st.form("add_message_form", clear_on_submit=True):
-        msg_author = st.text_input(
-            "Your name",
-            placeholder="e.g. jay.dolai",
-            key="msg_author",
-        )
-        msg_text = st.text_area(
-            "Message",
-            placeholder="Type your message here...",
-            height=100,
-            key="msg_text",
-        )
-        submitted = st.form_submit_button("📨 Send Message", type="primary")
-
-        if submitted:
-            errors = []
-            if not msg_author.strip():
-                errors.append("Name is required.")
-            if not msg_text.strip():
-                errors.append("Message cannot be empty.")
-
-            if errors:
-                for err in errors:
-                    st.error(f"❌ {err}")
-            else:
-                try:
-                    add_message(ticket_id, msg_text, msg_author)
-                    st.success("✅ Message sent!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"❌ Could not send message: {e}")
-
-
-# ─────────────────────────────────────────
-# MAIN PANEL — CREATE TICKET
-# ─────────────────────────────────────────
-
-def render_create_ticket():
-    st.title("➕ Create New Ticket")
-    st.markdown("Fill in the details below. Fields marked **\*** are required.")
-    st.divider()
-
-    with st.form("create_ticket_form", clear_on_submit=True):
-        title = st.text_input(
-            "Title *",
-            placeholder="Short description of the issue",
-            max_chars=200,
-        )
-
-        col1, col2 = st.columns(2)
-        with col1:
-            priority = st.selectbox(
-                "Priority *",
-                options=PRIORITY_OPTIONS,
-                index=1,  # default: medium
-            )
-        with col2:
-            category = st.text_input(
-                "Category",
-                placeholder="e.g. infra, access, data, billing",
-            )
-
-        created_by = st.text_input(
-            "Your name / email *",
-            placeholder="e.g. jay.dolai",
-        )
-
-        submitted = st.form_submit_button("🚀 Create Ticket", type="primary")
-
-        if submitted:
-            errors = []
-            if not title.strip():
-                errors.append("Title is required.")
-            if not created_by.strip():
-                errors.append("Name / email is required.")
-
-            if errors:
-                for err in errors:
-                    st.error(f"❌ {err}")
-            else:
-                try:
-                    new_id = create_ticket(
-                        title=title,
-                        created_by=created_by,
-                        priority=priority,
-                        category=category.strip() or None,
-                    )
-                    st.success(f"✅ Ticket #{new_id} created successfully!")
-                    st.info("Opening ticket...")
-                    go_detail(new_id)
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"❌ Could not create ticket: {e}")
-
-    st.divider()
-    if st.button("← Cancel — back to ticket list"):
-        go_list()
-        st.rerun()
-
-
-# ─────────────────────────────────────────
-# ROUTER — render the right view
-# ─────────────────────────────────────────
-
-view = st.session_state.view
-
-if view == "list":
-    render_ticket_list()
-elif view == "detail":
-    render_ticket_detail()
-elif view == "create":
-    render_create_ticket()
-else:
-    render_ticket_list()
