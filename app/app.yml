@@ -2,7 +2,4 @@ command: ["python", "app.py"]
 
 env:
   - name: LAKEBASE_CONN
-    valueFrom:
-      secretRef:
-        scope: capstone
-        key: lakebase-conn
+    valueFrom: LAKEBASE_CONN
