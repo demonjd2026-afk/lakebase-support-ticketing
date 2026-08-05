@@ -157,11 +157,34 @@ CSS = """
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }
 
-/* ═══ FORCE LIGHT ═══ */
+/* ═══ FORCE LIGHT — kill all dark wrappers ═══ */
 *, *::before, *::after { color-scheme: light !important; }
-body, .gradio-container, .app, .main, .wrap, .contain, .gap, .styler, .container {
+body, .gradio-container, .app, .main, .wrap, .contain, .gap, .styler, .container,
+.block, .form, .panel, .row, .column, [class*="svelte"], [class*="block"],
+[class*="form"], [class*="wrap"], [class*="container"], [class*="padded"] {
     background: transparent !important;
+    background-color: transparent !important;
+    border-color: #e2e8f0 !important;
 }
+/* Inside panels, all wrappers are white */
+.pnl, .pnl *, .pnl .block, .pnl .form, .pnl [class*="svelte"],
+.pnl [class*="block"], .pnl [class*="form"] {
+    background: #ffffff !important; background-color: #ffffff !important;
+}
+.pnl-d, .pnl-d *, .pnl-d .block, .pnl-d .form, .pnl-d [class*="svelte"],
+.pnl-d [class*="block"], .pnl-d [class*="form"] {
+    background: #fef2f2 !important; background-color: #fef2f2 !important;
+}
+/* But inputs stay white and visible */
+.pnl input, .pnl textarea, .pnl select,
+.pnl-d input, .pnl-d textarea, .pnl-d select {
+    background: #ffffff !important; background-color: #ffffff !important;
+}
+/* Standalone rows outside panels */
+.eq-row, .eq-row *, .eq-row .block, .eq-row .form, .eq-row [class*="svelte"] {
+    background: transparent !important; background-color: transparent !important;
+}
+.eq-row input { background: #ffffff !important; background-color: #ffffff !important; }
 
 /* ═══ LAYOUT ═══ */
 .gradio-container {
@@ -192,7 +215,7 @@ p, span, div, label, h1, h2, h3, h4, h5, h6, li { color: #334155 !important; }
 /* ═══ SIDEBAR ═══ */
 .sb { background: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 12px;
       padding: 16px 14px; position: sticky; top: 13px; box-shadow: 0 1px 3px rgba(15,23,42,0.05); }
-.sb-h { font-size: 10px !important; font-weight: 700 !important; color: #94a3b8 !important;
+.sb-h { font-size: 10.5px !important; font-weight: 700 !important; color: #475569 !important;
         text-transform: uppercase; letter-spacing: 0.08em;
         padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9 !important; }
 .sb-c { display: block; padding: 11px 13px; margin-bottom: 7px; border-radius: 9px;
@@ -233,7 +256,7 @@ p, span, div, label, h1, h2, h3, h4, h5, h6, li { color: #334155 !important; }
        margin-bottom: 14px !important; box-shadow: 0 1px 3px rgba(15,23,42,0.04) !important; }
 .pnl-d { background: #fef2f2 !important; border: 1px solid #fecaca !important;
          border-radius: 12px !important; padding: 16px !important; margin-top: 12px !important; }
-.ph, .ph * { font-size: 10.5px !important; font-weight: 700 !important; color: #94a3b8 !important;
+.ph, .ph * { font-size: 11px !important; font-weight: 700 !important; color: #475569 !important;
              text-transform: uppercase !important; letter-spacing: 0.08em !important;
              background: transparent !important; }
 .ph { margin: 0 0 13px 0 !important; padding-bottom: 9px !important;
@@ -248,7 +271,7 @@ p, span, div, label, h1, h2, h3, h4, h5, h6, li { color: #334155 !important; }
                 border-bottom: 1px solid #f1f5f9; }
 .td-title { font-size: 15px !important; font-weight: 650 !important; color: #0f172a !important; }
 .td-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.td-k { font-size: 10px !important; font-weight: 700 !important; color: #94a3b8 !important;
+.td-k { font-size: 10.5px !important; font-weight: 700 !important; color: #475569 !important;
         text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
 .td-v { font-size: 13px !important; color: #334155 !important; font-weight: 500 !important; }
 .td-empty { font-size: 13px !important; color: #94a3b8 !important;
@@ -275,8 +298,22 @@ textarea:focus, input:focus {
     box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important; outline: none !important;
 }
 input::placeholder, textarea::placeholder { color: #94a3b8 !important; }
-label, label span { color: #334155 !important; font-size: 12.5px !important;
-    font-weight: 600 !important; background: transparent !important; }
+/* ═══ LABELS — always transparent bg, dark readable text ═══ */
+label, label span, label div, .label-wrap, .label-wrap span,
+[class*="label"], [class*="label"] span {
+    background: transparent !important; background-color: transparent !important;
+    color: #1e293b !important; font-size: 12.5px !important;
+    font-weight: 600 !important; padding-left: 0 !important;
+    border: none !important; box-shadow: none !important;
+    letter-spacing: 0 !important; text-transform: none !important;
+}
+label { margin-bottom: 6px !important; display: block !important; }
+/* Checkbox labels inline */
+input[type="checkbox"] + span, .checkbox-label, label:has(input[type="checkbox"]) {
+    display: inline-flex !important; align-items: center !important;
+    gap: 8px !important; color: #334155 !important;
+    font-weight: 500 !important; font-size: 12.5px !important;
+}
 
 /* ═══ DROPDOWNS — let Gradio render, just theme it ═══ */
 .gradio-dropdown, [class*="dropdown"] { position: relative !important; }
