@@ -1,53 +1,19 @@
 # =============================================================
 # db.py — Lakebase connection + all query helpers
-# Uses Databricks SDK for OAuth token exchange inside Apps
-# Falls back to LAKEBASE_CONN env var for local development
+# Reads LAKEBASE_CONN env var injected by Databricks Apps
 # =============================================================
 
 import os
 import psycopg2
 import psycopg2.extras
 
-LAKEBASE_HOST = "ep-damp-rain-d8xddh4u.database.us-east-2.cloud.databricks.com"
-LAKEBASE_DB   = "databricks_postgres"
-LAKEBASE_USER = "jayanthdolai07@gmail.com"
-
 
 def get_conn():
-    """
-    Returns a psycopg2 connection.
-    Inside Databricks Apps: uses SDK to get a fresh OAuth token.
-    Local dev: uses LAKEBASE_CONN env var directly.
-    """
     conn_str = os.environ.get("LAKEBASE_CONN")
-
-    if conn_str and not conn_str.startswith("postgresql://jayanthdolai"):
-        # Local dev or valid override
-        return psycopg2.connect(conn_str, cursor_factory=psycopg2.extras.RealDictCursor)
-
-    # Inside Databricks Apps — use SDK to get fresh OAuth token
-    try:
-        from databricks.sdk import WorkspaceClient
-        w = WorkspaceClient()
-        token = w.config.authenticate()["Authorization"].replace("Bearer ", "")
-    except Exception:
-        # Fallback: use DATABRICKS_TOKEN env var injected by Apps runtime
-        token = os.environ.get("DATABRICKS_TOKEN") or os.environ.get("DATABRICKS_RUNTIME_TOKEN", "")
-
-    import urllib.parse
-    user_encoded = urllib.parse.quote(LAKEBASE_USER, safe="")
-    token_encoded = urllib.parse.quote(token, safe="")
-
-    conn_str = (
-        f"postgresql://{user_encoded}:{token_encoded}"
-        f"@{LAKEBASE_HOST}/{LAKEBASE_DB}?sslmode=require"
-    )
+    if not conn_str:
+        raise EnvironmentError("LAKEBASE_CONN environment variable is not set.")
     return psycopg2.connect(conn_str, cursor_factory=psycopg2.extras.RealDictCursor)
 
-
-# ─────────────────────────────────────────
-# READ HELPERS
-# ─────────────────────────────────────────
 
 def get_all_tickets(status_filter=None):
     conn = get_conn()
@@ -59,9 +25,7 @@ def get_all_tickets(status_filter=None):
                        created_at,
                        (SELECT COUNT(*) FROM ticket_messages m
                         WHERE m.ticket_id = t.ticket_id) AS message_count
-                FROM tickets t
-                WHERE status = %s
-                ORDER BY created_at DESC
+                FROM tickets t WHERE status = %s ORDER BY created_at DESC
             """, (status_filter,))
         else:
             cur.execute("""
@@ -69,8 +33,7 @@ def get_all_tickets(status_filter=None):
                        created_at,
                        (SELECT COUNT(*) FROM ticket_messages m
                         WHERE m.ticket_id = t.ticket_id) AS message_count
-                FROM tickets t
-                ORDER BY created_at DESC
+                FROM tickets t ORDER BY created_at DESC
             """)
         return [dict(row) for row in cur.fetchall()]
     finally:
@@ -97,9 +60,7 @@ def get_messages(ticket_id):
         cur = conn.cursor()
         cur.execute("""
             SELECT message_id, ticket_id, message_text, author, created_at
-            FROM ticket_messages
-            WHERE ticket_id = %s
-            ORDER BY created_at ASC
+            FROM ticket_messages WHERE ticket_id = %s ORDER BY created_at ASC
         """, (ticket_id,))
         return [dict(row) for row in cur.fetchall()]
     finally:
@@ -120,10 +81,6 @@ def get_stats():
     finally:
         conn.close()
 
-
-# ─────────────────────────────────────────
-# WRITE HELPERS
-# ─────────────────────────────────────────
 
 def create_ticket(title, created_by, priority='medium', category=None):
     if not title or not title.strip():
