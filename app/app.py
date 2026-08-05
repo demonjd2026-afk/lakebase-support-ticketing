@@ -68,18 +68,42 @@ def load_messages(ticket_id):
         return f"Error: {e}"
 
 
+def load_detail_html(t):
+    """Render ticket details as clean HTML instead of disabled textboxes."""
+    if not t:
+        return '<div class="td-empty">Enter a ticket ID above and click Load ticket.</div>'
+    st  = t["status"]
+    pr  = t["priority"]
+    return f"""
+    <div class="td">
+      <div class="td-title-row">
+        <div class="td-title">#{t['ticket_id']} — {t['title']}</div>
+        <span class="chip chip-{st}">{STATUS_BADGE.get(st, st)}</span>
+      </div>
+      <div class="td-grid">
+        <div class="td-f"><div class="td-k">Priority</div>
+          <div class="td-v"><span class="chip chip-p-{pr}">{PRIORITY_BADGE.get(pr, pr)}</span></div></div>
+        <div class="td-f"><div class="td-k">Category</div>
+          <div class="td-v">{t.get('category') or 'general'}</div></div>
+        <div class="td-f"><div class="td-k">Created by</div>
+          <div class="td-v">{t['created_by']}</div></div>
+        <div class="td-f"><div class="td-k">Created at</div>
+          <div class="td-v">{fmt_time(t['created_at'])}</div></div>
+      </div>
+    </div>
+    """
+
+
 def on_ticket_select(tid):
-    if not tid: return "", "", "", "", "", "", ""
+    if not tid:
+        return load_detail_html(None), "_Enter a ticket ID above and click Load ticket._"
     try:
         t = get_ticket_by_id(int(tid))
-        if not t: return "Ticket not found", "", "", "", "", "", ""
-        return (f"#{t['ticket_id']} — {t['title']}",
-                STATUS_BADGE.get(t["status"], t["status"]),
-                PRIORITY_BADGE.get(t["priority"], t["priority"]),
-                t.get("category") or "general", t["created_by"],
-                fmt_time(t["created_at"]), load_messages(int(tid)))
+        if not t:
+            return '<div class="td-empty">Ticket not found.</div>', ""
+        return load_detail_html(t), load_messages(int(tid))
     except Exception as e:
-        return f"Error: {e}", "", "", "", "", "", ""
+        return f'<div class="td-empty">Error: {e}</div>', ""
 
 
 def on_filter_change(f): return load_ticket_table(f)
@@ -107,12 +131,13 @@ def on_add_message(tid, author, text):
 
 
 def on_update_status(tid, new_status):
-    if not tid: return "⚠️ No ticket loaded", "", load_stats_html()
+    if not tid: return "⚠️ No ticket loaded", load_detail_html(None), load_stats_html()
     try:
         update_status(int(tid), new_status)
-        return f"✅ Status updated to {new_status}", STATUS_BADGE.get(new_status, new_status), load_stats_html()
+        t = get_ticket_by_id(int(tid))
+        return f"✅ Status updated to {new_status}", load_detail_html(t), load_stats_html()
     except Exception as e:
-        return f"❌ {e}", "", load_stats_html()
+        return f"❌ {e}", load_detail_html(None), load_stats_html()
 
 
 def on_delete_ticket(tid, confirmed):
@@ -126,29 +151,29 @@ def on_delete_ticket(tid, confirmed):
 
 
 CSS = """
-/* ═══ FORCE LIGHT THEME EVERYWHERE ═══ */
-*, *::before, *::after { color-scheme: light !important; }
-
-body, .gradio-container, .app, .main, .wrap, .contain,
-.block, .form, .panel, .gap, .styler, .container,
-[class*="svelte"], [class*="block"], [class*="form"] {
-    background: transparent !important;
-    background-color: transparent !important;
-    border-color: #e5e7eb !important;
+/* ═══ FONT ═══ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*, body, .gradio-container, button, input, textarea, select, table, span, div, p, label {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    font-feature-settings: 'cv02','cv03','cv04','cv11' !important;
 }
 
+/* ═══ FORCE LIGHT ═══ */
+*, *::before, *::after { color-scheme: light !important; }
+body, .gradio-container, .app, .main, .wrap, .contain, .block, .form,
+.gap, .styler, .container, [class*="svelte"] {
+    background: transparent !important; border-color: #e5e7eb !important;
+}
+
+/* ═══ LAYOUT + BACKGROUND ═══ */
 .gradio-container {
     max-width: 1340px !important; margin: 0 auto !important;
     padding: 0 24px 24px 24px !important;
-    background: #f9fafb !important; color: #111827 !important;
+    background: #f4f6fa !important; color: #111827 !important;
 }
-body { background: #f9fafb !important; }
+body { background: #f4f6fa !important; }
 footer { display: none !important; }
-
-/* ═══ ALL TEXT DARK ═══ */
-p, span, div, label, h1, h2, h3, h4, h5, h6, li, td, th {
-    color: #374151 !important;
-}
+p, span, div, label, h1, h2, h3, h4, h5, h6, li, td, th { color: #374151 !important; }
 
 /* ═══ TOP BAR ═══ */
 .topbar {
@@ -157,7 +182,7 @@ p, span, div, label, h1, h2, h3, h4, h5, h6, li, td, th {
     display: flex; align-items: center; justify-content: space-between;
 }
 .tb-l { display: flex; align-items: center; gap: 11px; }
-.tb-i { width: 32px; height: 32px; border-radius: 8px; background: #f3f4f6 !important;
+.tb-i { width: 32px; height: 32px; border-radius: 8px; background: #eef2ff !important;
         display: flex; align-items: center; justify-content: center; font-size: 16px; }
 .tb-t { font-size: 15px !important; font-weight: 650 !important; color: #111827 !important; }
 .tb-s { font-size: 11.5px !important; color: #9ca3af !important; margin-top: 1px; }
@@ -167,8 +192,7 @@ p, span, div, label, h1, h2, h3, h4, h5, h6, li, td, th {
 
 /* ═══ SIDEBAR ═══ */
 .sb { background: #ffffff !important; border: 1px solid #e5e7eb !important; border-radius: 10px;
-      padding: 15px 13px; position: sticky; top: 13px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+      padding: 15px 13px; position: sticky; top: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
 .sb-h { font-size: 10px !important; font-weight: 700 !important; color: #9ca3af !important;
         text-transform: uppercase; letter-spacing: 0.08em;
         padding-bottom: 9px; margin-bottom: 11px; border-bottom: 1px solid #f3f4f6 !important; }
@@ -188,84 +212,135 @@ p, span, div, label, h1, h2, h3, h4, h5, h6, li, td, th {
 .sb-fs { font-size: 10px !important; color: #9ca3af !important; margin-top: 1px; }
 .sb-e  { color: #dc2626 !important; font-size: 11px !important; }
 
-/* ═══ TABS ═══ */
+/* ═══ TABS — active bg + hover bg ═══ */
 .tab-nav { border-bottom: 1px solid #e5e7eb !important; margin-bottom: 16px !important;
            gap: 4px !important; background: transparent !important; }
 .tab-nav button {
     background: transparent !important; color: #6b7280 !important;
-    border: none !important; border-bottom: 2px solid transparent !important;
-    border-radius: 0 !important; font-size: 13px !important; font-weight: 600 !important;
-    padding: 10px 16px !important; margin-bottom: -1px !important;
+    border: 1px solid transparent !important; border-bottom: none !important;
+    border-radius: 8px 8px 0 0 !important; font-size: 13px !important;
+    font-weight: 600 !important; padding: 10px 18px !important;
+    margin-bottom: -1px !important; transition: all 0.15s !important;
 }
-.tab-nav button.selected { color: #4338ca !important; border-bottom-color: #4338ca !important; }
-.tab-nav button:hover { color: #4b5563 !important; }
+.tab-nav button:hover {
+    background: #eef2ff !important; color: #4338ca !important;
+}
+.tab-nav button.selected {
+    background: #ffffff !important; color: #4338ca !important;
+    border-color: #e5e7eb !important; border-bottom: 1px solid #ffffff !important;
+    box-shadow: 0 -1px 2px rgba(0,0,0,0.03) !important;
+}
 
-/* ═══ PANELS / GROUPS ═══ */
+/* ═══ PANELS ═══ */
 .pnl, .pnl > *, .pnl .block, .pnl .form {
     background: #ffffff !important; border-radius: 10px !important;
 }
-.pnl {
-    border: 1px solid #e5e7eb !important; padding: 16px !important;
-    margin-bottom: 12px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
-}
+.pnl { border: 1px solid #e5e7eb !important; padding: 16px !important;
+       margin-bottom: 12px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important; }
 .pnl-d, .pnl-d > *, .pnl-d .block, .pnl-d .form {
     background: #fef2f2 !important; border-radius: 10px !important;
 }
 .pnl-d { border: 1px solid #fecaca !important; padding: 14px !important; margin-top: 10px !important; }
 
-.ph, .ph * {
-    font-size: 10.5px !important; font-weight: 700 !important; color: #9ca3af !important;
-    text-transform: uppercase !important; letter-spacing: 0.08em !important;
-    background: transparent !important;
-}
+.ph, .ph * { font-size: 10.5px !important; font-weight: 700 !important; color: #9ca3af !important;
+             text-transform: uppercase !important; letter-spacing: 0.08em !important;
+             background: transparent !important; }
 .ph { margin: 0 0 11px 0 !important; padding-bottom: 8px !important;
       border-bottom: 1px solid #f3f4f6 !important; }
 .hint, .hint * { font-size: 12.5px !important; color: #6b7280 !important;
                  background: transparent !important; margin: 0 0 12px 0 !important; }
+
+/* ═══ TICKET DETAILS (HTML render) ═══ */
+.td { padding: 2px 0; }
+.td-title-row { display: flex; align-items: center; justify-content: space-between;
+                gap: 12px; padding-bottom: 12px; margin-bottom: 12px;
+                border-bottom: 1px solid #f3f4f6; }
+.td-title { font-size: 15px !important; font-weight: 650 !important; color: #111827 !important; }
+.td-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.td-f { }
+.td-k { font-size: 10px !important; font-weight: 700 !important; color: #9ca3af !important;
+        text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+.td-v { font-size: 13px !important; color: #374151 !important; font-weight: 500 !important; }
+.td-empty { font-size: 13px !important; color: #9ca3af !important;
+            font-style: italic; padding: 14px 0; }
+
+/* ═══ CHIPS ═══ */
+.chip { display: inline-block; padding: 3px 10px; border-radius: 20px;
+        font-size: 11px !important; font-weight: 600 !important; white-space: nowrap; }
+.chip-open        { background: #fef3c7 !important; color: #92400e !important; }
+.chip-in_progress { background: #dbeafe !important; color: #1e40af !important; }
+.chip-resolved    { background: #d1fae5 !important; color: #065f46 !important; }
+.chip-p-high   { background: #fee2e2 !important; color: #991b1b !important; }
+.chip-p-medium { background: #fed7aa !important; color: #9a3412 !important; }
+.chip-p-low    { background: #d1fae5 !important; color: #065f46 !important; }
 
 /* ═══ INPUTS ═══ */
 input[type="text"], input[type="number"], textarea, select {
     background: #ffffff !important; border: 1px solid #d1d5db !important;
     border-radius: 7px !important; color: #111827 !important;
     font-size: 13px !important; padding: 9px 12px !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
 }
 input:focus, textarea:focus, select:focus {
     border-color: #818cf8 !important;
     box-shadow: 0 0 0 3px rgba(99,102,241,0.10) !important; outline: none !important;
 }
 input::placeholder, textarea::placeholder { color: #9ca3af !important; }
-label, label span {
-    color: #374151 !important; font-size: 12px !important; font-weight: 600 !important;
-    text-transform: none !important; letter-spacing: 0 !important;
-    background: transparent !important;
+label, label span { color: #374151 !important; font-size: 12px !important;
+    font-weight: 600 !important; text-transform: none !important;
+    letter-spacing: 0 !important; background: transparent !important; }
+
+/* ═══ DROPDOWN — fix overlap ═══ */
+ul.options, .options, [class*="dropdown"] ul, [role="listbox"] {
+    background: #ffffff !important; border: 1px solid #d1d5db !important;
+    border-radius: 8px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.14) !important;
+    z-index: 9999 !important; position: absolute !important;
+    max-height: 240px !important; overflow-y: auto !important;
+    padding: 4px !important; margin-top: 4px !important;
+}
+ul.options li, .options li, [role="option"] {
+    background: #ffffff !important; color: #374151 !important;
+    font-size: 13px !important; padding: 8px 12px !important;
+    border-radius: 6px !important; cursor: pointer !important;
+}
+ul.options li:hover, .options li:hover, [role="option"]:hover {
+    background: #eef2ff !important; color: #4338ca !important;
+}
+ul.options li.selected, [role="option"][aria-selected="true"] {
+    background: #eef2ff !important; color: #4338ca !important; font-weight: 600 !important;
+}
+
+/* ═══ FILTER ROW — equal heights ═══ */
+.filter-row { align-items: flex-end !important; }
+.filter-row > div { margin-bottom: 0 !important; }
+.filter-row button {
+    height: 42px !important; min-height: 42px !important; max-height: 42px !important;
+    line-height: 42px !important; margin-bottom: 0 !important;
 }
 
 /* ═══ BUTTONS ═══ */
 button.primary, button.secondary, button.stop {
     border-radius: 7px !important; font-size: 13px !important; font-weight: 600 !important;
-    padding: 0 18px !important; height: 36px !important; min-height: 36px !important;
-    max-height: 36px !important; line-height: 36px !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    padding: 0 18px !important; height: 40px !important; min-height: 40px !important;
+    max-height: 40px !important; line-height: 40px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; transition: all 0.15s !important;
 }
-button.primary { background: #4f46e5 !important; color: #ffffff !important; border: none !important; }
+button.primary { background: #4f46e5 !important; color: #fff !important; border: none !important; }
 button.primary:hover { background: #4338ca !important; }
-button.primary span { color: #ffffff !important; }
-
-button.secondary { background: #ffffff !important; color: #374151 !important;
+button.primary span { color: #fff !important; }
+button.secondary { background: #fff !important; color: #374151 !important;
                    border: 1px solid #d1d5db !important; }
-button.secondary:hover { background: #f9fafb !important; }
+button.secondary:hover { background: #f9fafb !important; border-color: #9ca3af !important; }
 button.secondary span { color: #374151 !important; }
-
-button.stop { background: #dc2626 !important; color: #ffffff !important; border: none !important; }
+button.stop { background: #dc2626 !important; color: #fff !important; border: none !important; }
 button.stop:hover { background: #b91c1c !important; }
-button.stop span { color: #ffffff !important; }
+button.stop span { color: #fff !important; }
 
 /* ═══ DATAFRAME ═══ */
-table, table th, table td { background: #ffffff !important; color: #374151 !important; }
+table, table th, table td { background: #fff !important; color: #374151 !important; }
 table th { background: #f9fafb !important; color: #6b7280 !important;
            font-size: 11px !important; font-weight: 600 !important; }
 table td { font-size: 12.5px !important; border-color: #f3f4f6 !important; }
+.table-wrap, [class*="table"] { overflow: visible !important; }
 
 /* ═══ MESSAGE THREAD ═══ */
 .msg, .msg * { background: transparent !important; }
@@ -283,7 +358,6 @@ table td { font-size: 12.5px !important; border-color: #f3f4f6 !important; }
              font-weight: 500 !important; background: transparent !important; }
 .fb { padding: 6px 0 !important; min-height: 24px !important; }
 
-/* ═══ CHECKBOX ═══ */
 input[type="checkbox"] { accent-color: #4f46e5 !important; }
 
 /* ═══ FOOTER ═══ */
@@ -291,7 +365,6 @@ input[type="checkbox"] { accent-color: #4f46e5 !important; }
              background: transparent !important; }
 .ft { padding: 14px; border-top: 1px solid #e5e7eb; margin-top: 18px; }
 
-/* ═══ SCROLLBAR ═══ */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 4px; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
@@ -330,9 +403,9 @@ with gr.Blocks(
 
             with gr.Tab("All Tickets"):
                 gr.Markdown("Browse and filter every ticket in the support queue.", elem_classes=["hint"])
-                with gr.Row(equal_height=True):
+                with gr.Row(equal_height=True, elem_classes=["filter-row"]):
                     filter_dd   = gr.Dropdown(choices=FILTER_OPTIONS, value="All",
-                                              label="Filter by status", scale=6)
+                                              label="Filter by status", scale=5)
                     refresh_btn = gr.Button("Refresh", variant="secondary", scale=1)
 
                 ticket_table = gr.Dataframe(
@@ -348,20 +421,13 @@ with gr.Blocks(
                 gr.Markdown("Load a ticket by ID to see its details, history, and take action.",
                             elem_classes=["hint"])
 
-                with gr.Row(equal_height=True):
-                    ticket_id_input = gr.Number(label="Ticket ID", precision=0, scale=6)
+                with gr.Row(equal_height=True, elem_classes=["filter-row"]):
+                    ticket_id_input = gr.Number(label="Ticket ID", precision=0, scale=5)
                     load_btn = gr.Button("Load ticket", variant="primary", scale=1)
 
                 with gr.Group(elem_classes=["pnl"]):
                     gr.Markdown("Ticket details", elem_classes=["ph"])
-                    with gr.Row():
-                        detail_title  = gr.Textbox(label="Title",  interactive=False, scale=4)
-                        detail_status = gr.Textbox(label="Status", interactive=False, scale=1)
-                    with gr.Row():
-                        detail_priority   = gr.Textbox(label="Priority",   interactive=False, scale=1)
-                        detail_category   = gr.Textbox(label="Category",   interactive=False, scale=1)
-                        detail_created_by = gr.Textbox(label="Created by", interactive=False, scale=1)
-                        detail_created_at = gr.Textbox(label="Created at", interactive=False, scale=2)
+                    detail_html = gr.HTML(load_detail_html(None))
 
                 with gr.Group(elem_classes=["pnl"]):
                     gr.Markdown("Message thread", elem_classes=["ph"])
@@ -394,11 +460,10 @@ with gr.Blocks(
                 action_result = gr.Markdown("", elem_classes=["fb"])
 
                 load_btn.click(fn=on_ticket_select, inputs=ticket_id_input,
-                    outputs=[detail_title, detail_status, detail_priority,
-                             detail_category, detail_created_by, detail_created_at, message_thread])
+                    outputs=[detail_html, message_thread])
                 update_status_btn.click(fn=on_update_status,
                     inputs=[ticket_id_input, new_status_dd],
-                    outputs=[action_result, detail_status, stats_html])
+                    outputs=[action_result, detail_html, stats_html])
                 delete_btn.click(fn=on_delete_ticket,
                     inputs=[ticket_id_input, confirm_delete],
                     outputs=[action_result, ticket_table, stats_html])
