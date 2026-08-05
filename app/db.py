@@ -1,34 +1,47 @@
 # =============================================================
 # db.py — Lakebase connection + all query helpers
-# All SQL lives here. app.py never writes raw SQL.
-#
-# Connection string format (OAuth / PAT):
-#   postgresql://token:<PAT>@dbc-291b687e-da89.cloud.databricks.com:5432/databricks_postgres
-#
-# Set this as env var LAKEBASE_CONN before running:
-#   export LAKEBASE_CONN="postgresql://token:<PAT>@dbc-291b687e-da89.cloud.databricks.com:5432/databricks_postgres"
+# Uses Databricks SDK for OAuth token exchange inside Apps
+# Falls back to LAKEBASE_CONN env var for local development
 # =============================================================
 
 import os
 import psycopg2
-import psycopg2.extras  # returns rows as dicts
+import psycopg2.extras
 
+LAKEBASE_HOST = "ep-damp-rain-d8xddh4u.database.us-east-2.cloud.databricks.com"
+LAKEBASE_DB   = "databricks_postgres"
+LAKEBASE_USER = "jayanthdolai07@gmail.com"
 
-# ─────────────────────────────────────────
-# CONNECTION
-# ─────────────────────────────────────────
 
 def get_conn():
     """
-    Returns a new psycopg2 connection using the LAKEBASE_CONN env var.
-    cursor_factory=RealDictCursor means every row comes back as a dict.
+    Returns a psycopg2 connection.
+    Inside Databricks Apps: uses SDK to get a fresh OAuth token.
+    Local dev: uses LAKEBASE_CONN env var directly.
     """
     conn_str = os.environ.get("LAKEBASE_CONN")
-    if not conn_str:
-        raise EnvironmentError(
-            "LAKEBASE_CONN environment variable is not set. "
-            "Set it to: postgresql://token:<PAT>@dbc-291b687e-da89.cloud.databricks.com:5432/databricks_postgres"
-        )
+
+    if conn_str and not conn_str.startswith("postgresql://jayanthdolai"):
+        # Local dev or valid override
+        return psycopg2.connect(conn_str, cursor_factory=psycopg2.extras.RealDictCursor)
+
+    # Inside Databricks Apps — use SDK to get fresh OAuth token
+    try:
+        from databricks.sdk import WorkspaceClient
+        w = WorkspaceClient()
+        token = w.config.authenticate()["Authorization"].replace("Bearer ", "")
+    except Exception:
+        # Fallback: use DATABRICKS_TOKEN env var injected by Apps runtime
+        token = os.environ.get("DATABRICKS_TOKEN") or os.environ.get("DATABRICKS_RUNTIME_TOKEN", "")
+
+    import urllib.parse
+    user_encoded = urllib.parse.quote(LAKEBASE_USER, safe="")
+    token_encoded = urllib.parse.quote(token, safe="")
+
+    conn_str = (
+        f"postgresql://{user_encoded}:{token_encoded}"
+        f"@{LAKEBASE_HOST}/{LAKEBASE_DB}?sslmode=require"
+    )
     return psycopg2.connect(conn_str, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
@@ -37,10 +50,6 @@ def get_conn():
 # ─────────────────────────────────────────
 
 def get_all_tickets(status_filter=None):
-    """
-    Returns all tickets, optionally filtered by status.
-    status_filter: None | 'open' | 'in_progress' | 'resolved'
-    """
     conn = get_conn()
     try:
         cur = conn.cursor()
@@ -69,14 +78,12 @@ def get_all_tickets(status_filter=None):
 
 
 def get_ticket_by_id(ticket_id):
-    """Returns a single ticket dict, or None if not found."""
     conn = get_conn()
     try:
         cur = conn.cursor()
         cur.execute("""
             SELECT ticket_id, title, status, priority, category, created_by, created_at
-            FROM tickets
-            WHERE ticket_id = %s
+            FROM tickets WHERE ticket_id = %s
         """, (ticket_id,))
         row = cur.fetchone()
         return dict(row) if row else None
@@ -85,7 +92,6 @@ def get_ticket_by_id(ticket_id):
 
 
 def get_messages(ticket_id):
-    """Returns all messages for a ticket, oldest first."""
     conn = get_conn()
     try:
         cur = conn.cursor()
@@ -101,18 +107,10 @@ def get_messages(ticket_id):
 
 
 def get_stats():
-    """
-    Returns ticket counts by status for the stats panel.
-    Example: {'open': 2, 'in_progress': 1, 'resolved': 1, 'total': 4}
-    """
     conn = get_conn()
     try:
         cur = conn.cursor()
-        cur.execute("""
-            SELECT status, COUNT(*) AS cnt
-            FROM tickets
-            GROUP BY status
-        """)
+        cur.execute("SELECT status, COUNT(*) AS cnt FROM tickets GROUP BY status")
         rows = cur.fetchall()
         stats = {'open': 0, 'in_progress': 0, 'resolved': 0}
         for row in rows:
@@ -128,21 +126,16 @@ def get_stats():
 # ─────────────────────────────────────────
 
 def create_ticket(title, created_by, priority='medium', category=None):
-    """
-    Inserts a new ticket. Returns the new ticket_id.
-    """
     if not title or not title.strip():
-        raise ValueError("Ticket title cannot be empty.")
+        raise ValueError("Title cannot be empty.")
     if not created_by or not created_by.strip():
         raise ValueError("Created by cannot be empty.")
-
     conn = get_conn()
     try:
         cur = conn.cursor()
         cur.execute("""
             INSERT INTO tickets (title, status, priority, category, created_by)
-            VALUES (%s, 'open', %s, %s, %s)
-            RETURNING ticket_id
+            VALUES (%s, 'open', %s, %s, %s) RETURNING ticket_id
         """, (title.strip(), priority, category, created_by.strip()))
         ticket_id = cur.fetchone()['ticket_id']
         conn.commit()
@@ -155,14 +148,10 @@ def create_ticket(title, created_by, priority='medium', category=None):
 
 
 def add_message(ticket_id, message_text, author):
-    """
-    Inserts a new message on an existing ticket.
-    """
     if not message_text or not message_text.strip():
-        raise ValueError("Message text cannot be empty.")
+        raise ValueError("Message cannot be empty.")
     if not author or not author.strip():
         raise ValueError("Author cannot be empty.")
-
     conn = get_conn()
     try:
         cur = conn.cursor()
@@ -179,20 +168,14 @@ def add_message(ticket_id, message_text, author):
 
 
 def update_status(ticket_id, new_status):
-    """
-    Updates the status of a ticket.
-    new_status must be one of: open, in_progress, resolved
-    """
     valid = {'open', 'in_progress', 'resolved'}
     if new_status not in valid:
-        raise ValueError(f"Invalid status '{new_status}'. Must be one of: {valid}")
-
+        raise ValueError(f"Invalid status '{new_status}'.")
     conn = get_conn()
     try:
         cur = conn.cursor()
-        cur.execute("""
-            UPDATE tickets SET status = %s WHERE ticket_id = %s
-        """, (new_status, ticket_id))
+        cur.execute("UPDATE tickets SET status = %s WHERE ticket_id = %s",
+                    (new_status, ticket_id))
         conn.commit()
     except Exception:
         conn.rollback()
@@ -202,9 +185,6 @@ def update_status(ticket_id, new_status):
 
 
 def delete_ticket(ticket_id):
-    """
-    Deletes a ticket and all its messages (ON DELETE CASCADE handles messages).
-    """
     conn = get_conn()
     try:
         cur = conn.cursor()
@@ -215,20 +195,3 @@ def delete_ticket(ticket_id):
         raise
     finally:
         conn.close()
-
-
-# ─────────────────────────────────────────
-# QUICK TEST  (run: python db.py)
-# ─────────────────────────────────────────
-
-if __name__ == "__main__":
-    print("Testing Lakebase connection...")
-    try:
-        tickets = get_all_tickets()
-        print(f"✅ Connected. Tickets found: {len(tickets)}")
-        for t in tickets:
-            print(f"   [{t['ticket_id']}] {t['title']} — {t['status']} ({t['priority']})")
-        stats = get_stats()
-        print(f"\n📊 Stats: {stats}")
-    except Exception as e:
-        print(f"❌ Error: {e}")
