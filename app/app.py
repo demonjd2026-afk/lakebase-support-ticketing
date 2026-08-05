@@ -135,9 +135,9 @@ button.stop:hover { background:#b91c1c !important; }
 .dataframe thead tr th { background:#161b27 !important; color:#64748b !important; font-size:11px !important;
     font-weight:600 !important; text-transform:uppercase !important; padding:8px 12px !important;
     border-bottom:1px solid #21293d !important; }
-.dataframe tbody tr td { background:#0d1117 !important; color:#e2e8f0 !important; font-size:12px !important;
+.dataframe tbody tr td { background:#161b27 !important; color:#e2e8f0 !important; font-size:12px !important;
     padding:8px 12px !important; border-bottom:1px solid #161b27 !important; }
-.dataframe tbody tr:hover td { background:#161b27 !important; }
+.dataframe tbody tr:hover td { background:#1e2a3a !important; }
 .msg-thread { background:#161b27; border:1px solid #21293d; border-radius:8px;
     padding:14px 16px; min-height:80px; font-size:13px; line-height:1.6; }
 .form-group { background:#161b27; border:1px solid #21293d; border-radius:8px; padding:16px; }
@@ -173,7 +173,7 @@ with gr.Blocks(
         ticket_table = gr.Dataframe(
             headers=["ID","Title","Status","Priority","Category","Created By","Created At","💬"],
             value=load_ticket_table(), interactive=False, wrap=True,
-            column_widths=["4%","34%","11%","10%","10%","12%","13%","6%"],
+
         )
         filter_dd.change(fn=on_filter_change, inputs=filter_dd, outputs=ticket_table)
         refresh_btn.click(fn=lambda f: load_ticket_table(f), inputs=filter_dd, outputs=ticket_table)
