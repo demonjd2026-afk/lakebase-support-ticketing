@@ -478,6 +478,28 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
 ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ════════ BUTTON LOADING SWEEP ════════ */
+.gradio-container button.primary:disabled,
+.gradio-container button.secondary:disabled {
+    background: linear-gradient(
+        90deg,
+        #4f46e5 0%, #4f46e5 40%,
+        #818cf8 50%,
+        #4f46e5 60%, #4f46e5 100%
+    ) !important;
+    background-size: 250% 100% !important;
+    animation: btnSweep 0.9s linear infinite !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 1 !important;
+    cursor: progress !important;
+}
+
+@keyframes btnSweep {
+    0%   { background-position: 250% 0; }
+    100% { background-position: 0 0; }
+}
 """
 
 with gr.Blocks(
