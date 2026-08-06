@@ -515,6 +515,24 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
     0%   { background-position: 250% 0; }
     100% { background-position: 0 0; }
 }
+
+/* ════════ REFRESH BUTTON — match dropdown block height ════════ */
+#refresh-btn {
+    display: flex !important;
+    align-items: stretch !important;
+    height: 100% !important;
+    min-height: 84px !important;
+}
+#refresh-btn button {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 84px !important;
+    max-height: none !important;
+    line-height: normal !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+    overflow: hidden !important;
+}
 """
 
 with gr.Blocks(
@@ -552,7 +570,7 @@ with gr.Blocks(
                 with gr.Row(equal_height=True, elem_classes=["eq-row"]):
                     filter_dd   = gr.Dropdown(choices=FILTER_OPTIONS, value="All",
                                               label="Filter by status", scale=4)
-                    refresh_btn = gr.Button("Refresh", variant="secondary", scale=1,
+                    refresh_btn = gr.Button("Refresh", variant="primary", scale=1,
                                             elem_id="refresh-btn")
 
                 ticket_table = gr.Dataframe(
@@ -650,11 +668,13 @@ with gr.Blocks(
     <script>
     (function() {
         document.addEventListener('click', function(e) {
-            var btn = e.target.closest('#refresh-btn button, #refresh-btn');
+            var wrap = e.target.closest('#refresh-btn');
+            if (!wrap) return;
+            var btn = wrap.tagName === 'BUTTON' ? wrap : wrap.querySelector('button');
             if (!btn) return;
             btn.classList.add('sweeping');
-            setTimeout(function() { btn.classList.remove('sweeping'); }, 700);
-        });
+            setTimeout(function() { btn.classList.remove('sweeping'); }, 900);
+        }, true);
     })();
     </script>
     """)
