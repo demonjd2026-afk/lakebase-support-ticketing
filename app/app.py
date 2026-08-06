@@ -400,12 +400,26 @@ footer { display: none !important; }
 .gradio-container table tbody tr:nth-child(even) td { background: #f8fafc !important; }
 .gradio-container table tbody tr:hover td { background: #eef2ff !important; }
 
-/* Table wrapper rounding */
+/* Table wrapper — let it grow to fit all rows, no clipping */
 .gradio-container [data-testid="dataframe"] {
-    border-radius: 12px !important; overflow: hidden !important;
+    border-radius: 12px !important;
     border: 1px solid #e2e8f0 !important;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
 }
 .gradio-container [data-testid="dataframe"] table { border: none !important; }
+
+/* Kill Gradio's internal fixed-height scroll container on the table */
+.gradio-container [data-testid="dataframe"] > div,
+.gradio-container [data-testid="dataframe"] .table-wrap,
+.gradio-container [data-testid="dataframe"] [class*="table-wrap"],
+.gradio-container [data-testid="dataframe"] [class*="scroll"] {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+}
 
 /* ════════ TICKET DETAILS ════════ */
 .td { padding: 2px 0; }
