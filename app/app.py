@@ -406,14 +406,45 @@ footer { display: none !important; }
 }
 .gradio-container [data-testid="dataframe"] table { border: none !important; }
 
-/* Give the inner scroll container a real height + visible scrollbar */
+/* Inner scroll container: fixed height, both scrollbars always visible */
 .gradio-container [data-testid="dataframe"] .table-wrap,
-.gradio-container [data-testid="dataframe"] [class*="table-wrap"] {
-    max-height: 460px !important;
-    overflow-y: auto !important;
-    overflow-x: auto !important;
+.gradio-container [data-testid="dataframe"] [class*="table-wrap"],
+.gradio-container [data-testid="dataframe"] > div > div {
+    max-height: 440px !important;
+    height: 440px !important;
+    overflow-y: scroll !important;
+    overflow-x: scroll !important;
     scrollbar-width: thin !important;
-    scrollbar-color: #cbd5e1 #f1f5f9 !important;
+    scrollbar-color: #94a3b8 #f1f5f9 !important;
+}
+
+/* Force scrollbars to render (WebKit hides them by default on macOS) */
+.gradio-container [data-testid="dataframe"] .table-wrap::-webkit-scrollbar,
+.gradio-container [data-testid="dataframe"] [class*="table-wrap"]::-webkit-scrollbar {
+    width: 12px !important;
+    height: 12px !important;
+    -webkit-appearance: none !important;
+    display: block !important;
+}
+.gradio-container [data-testid="dataframe"] .table-wrap::-webkit-scrollbar-track,
+.gradio-container [data-testid="dataframe"] [class*="table-wrap"]::-webkit-scrollbar-track {
+    background: #f1f5f9 !important;
+    border-radius: 6px !important;
+}
+.gradio-container [data-testid="dataframe"] .table-wrap::-webkit-scrollbar-thumb,
+.gradio-container [data-testid="dataframe"] [class*="table-wrap"]::-webkit-scrollbar-thumb {
+    background: #94a3b8 !important;
+    border-radius: 6px !important;
+    border: 2px solid #f1f5f9 !important;
+}
+.gradio-container [data-testid="dataframe"] .table-wrap::-webkit-scrollbar-thumb:hover,
+.gradio-container [data-testid="dataframe"] [class*="table-wrap"]::-webkit-scrollbar-thumb:hover {
+    background: #64748b !important;
+}
+
+/* Table must be wide enough to trigger horizontal scroll */
+.gradio-container [data-testid="dataframe"] table {
+    min-width: 900px !important;
 }
 
 /* Sticky header so columns stay visible while scrolling */
@@ -499,14 +530,18 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
 .gradio-container button.primary:disabled,
 .gradio-container button.secondary:disabled,
 .gradio-container button.sweeping {
-    background: linear-gradient(
-        90deg,
-        #4f46e5 0%, #4f46e5 40%,
-        #818cf8 50%,
-        #4f46e5 60%, #4f46e5 100%
+    background-color: #4f46e5 !important;
+    background-image: linear-gradient(
+        100deg,
+        rgba(255,255,255,0)   0%,
+        rgba(255,255,255,0)   35%,
+        rgba(255,255,255,0.55) 50%,
+        rgba(255,255,255,0)   65%,
+        rgba(255,255,255,0)   100%
     ) !important;
-    background-size: 250% 100% !important;
-    animation: btnSweep 0.9s linear infinite !important;
+    background-size: 200% 100% !important;
+    background-repeat: no-repeat !important;
+    animation: btnSweep 1s linear infinite !important;
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
     opacity: 1 !important;
@@ -514,27 +549,43 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
 }
 
 @keyframes btnSweep {
-    0%   { background-position: 250% 0; }
-    100% { background-position: 0 0; }
+    0%   { background-position: -100% 0; }
+    100% { background-position:  200% 0; }
 }
 
 /* ════════ FILTER ROW — align dropdown and Refresh button ════════ */
 .eq-row { align-items: flex-end !important; gap: 14px !important; }
 .eq-row > * { margin-bottom: 0 !important; }
 
-#refresh-btn { display: flex !important; align-items: flex-end !important; }
+#refresh-btn {
+    display: flex !important;
+    align-items: flex-start !important;
+    padding-top: 26px !important;
+}
 #refresh-btn button {
     width: 100% !important;
     height: 44px !important;
     min-height: 44px !important;
     max-height: 44px !important;
-    line-height: 44px !important;
     padding: 0 20px !important;
     border-radius: 9px !important;
     font-size: 13.5px !important;
     font-weight: 600 !important;
     overflow: hidden !important;
-    margin-bottom: 0 !important;
+    margin: 0 !important;
+    /* perfect centering */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    position: relative !important;
+}
+#refresh-btn button span,
+#refresh-btn button * {
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 """
 
