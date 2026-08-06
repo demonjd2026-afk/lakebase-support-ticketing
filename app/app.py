@@ -405,9 +405,11 @@ footer { display: none !important; }
     overflow: hidden !important;
 }
 
-/* The scroll viewport */
-.gradio-container [data-testid="dataframe"] .table-wrap {
-    max-height: 420px !important;
+/* The scroll viewport — tall enough for ~5 rows, scrolls beyond */
+.gradio-container [data-testid="dataframe"] .table-wrap,
+.gradio-container [data-testid="dataframe"] [class*="table-wrap"],
+.gradio-container [data-testid="dataframe"] .wrap > div {
+    max-height: 600px !important;
     overflow-y: auto !important;
     overflow-x: auto !important;
     scrollbar-width: thin !important;
@@ -545,14 +547,16 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
 .eq-row { align-items: stretch !important; gap: 14px !important; }
 .eq-row > * { margin-bottom: 0 !important; }
 
-#refresh-btn {
+/* Both action buttons: align vertically centered against the input beside them.
+   Neighbor column = label (~28px) + bordered container (~86px). Input center ≈ 71px.
+   Button 46px → top offset = 71 - 23 = 48px. */
+#refresh-btn, #load-btn {
     display: flex !important;
-    align-items: flex-end !important;
-    align-self: stretch !important;
-    padding: 0 0 22px 0 !important;
+    align-items: flex-start !important;
+    padding-top: 48px !important;
     margin: 0 !important;
 }
-#refresh-btn button {
+#refresh-btn button, #load-btn button {
     width: 100% !important;
     height: 46px !important;
     min-height: 46px !important;
@@ -570,7 +574,7 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
     line-height: 1 !important;
     text-align: center !important;
 }
-#refresh-btn button > * {
+#refresh-btn button > *, #load-btn button > * {
     margin: 0 !important;
     padding: 0 !important;
     line-height: 1 !important;
@@ -632,7 +636,8 @@ with gr.Blocks(
 
                 with gr.Row(equal_height=True, elem_classes=["eq-row"]):
                     ticket_id_input = gr.Number(label="Ticket ID", precision=0, scale=4)
-                    load_btn = gr.Button("Load ticket", variant="primary", scale=1)
+                    load_btn = gr.Button("Load ticket", variant="primary", scale=1,
+                                         elem_id="load-btn")
 
                 with gr.Group(elem_classes=["pnl"]):
                     gr.Markdown("Ticket details", elem_classes=["ph"])
