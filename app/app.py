@@ -542,7 +542,8 @@ with gr.Blocks(
                 ticket_table = gr.Dataframe(
                     headers=["ID", "Title", "Status", "Priority", "Category",
                              "Created by", "Created at", "Msgs"],
-                    value=load_ticket_table(), interactive=False, wrap=True)
+                    value=load_ticket_table(), interactive=False, wrap=True,
+                    row_count=(15, "dynamic"))
 
                 filter_dd.change(fn=on_filter_change, inputs=filter_dd, outputs=ticket_table)
                 refresh_btn.click(fn=lambda f: load_ticket_table(f),
