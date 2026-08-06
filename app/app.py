@@ -238,6 +238,21 @@ footer { display: none !important; }
     box-shadow: 0 -2px 4px rgba(15,23,42,0.03) !important;
 }
 
+/* Tab content panel: no surrounding box — only the tab-nav underline remains */
+.gradio-container .tabitem,
+.gradio-container [id^="component"].tabitem,
+.gradio-container div[role="tabpanel"] {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding-top: 4px !important;
+}
+.gradio-container .tabs {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
 /* ════════ PANELS ════════ */
 .pnl {
     background: #ffffff !important; border: 1px solid #e2e8f0 !important;
@@ -409,7 +424,7 @@ footer { display: none !important; }
 .gradio-container [data-testid="dataframe"] .table-wrap,
 .gradio-container [data-testid="dataframe"] [class*="table-wrap"],
 .gradio-container [data-testid="dataframe"] .wrap > div {
-    max-height: 600px !important;
+    max-height: 680px !important;
     overflow-y: auto !important;
     overflow-x: auto !important;
     scrollbar-width: thin !important;
@@ -524,18 +539,9 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
 .eq-row { align-items: stretch !important; gap: 14px !important; }
 .eq-row > * { margin-bottom: 0 !important; }
 
-/* Action buttons: simple, solid, aligned with the input beside them */
+/* Action buttons: native Gradio buttons, just aligned beside the input */
 #refresh-btn, #load-btn {
-    padding-top: 34px !important;
-    margin: 0 !important;
-}
-#refresh-btn button, #load-btn button {
-    width: 100% !important;
-    height: 64px !important;
-    min-height: 64px !important;
-    border-radius: 10px !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
+    padding-top: 41px !important;
     margin: 0 !important;
 }
 """
