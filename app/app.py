@@ -374,8 +374,6 @@ footer { display: none !important; }
 }
 
 /* ════════ EQUAL ROW ════════ */
-.eq-row { align-items: flex-end !important; gap: 14px !important; }
-.eq-row button { width: 100% !important; }
 
 /* ════════ TABLE ════════ */
 .gradio-container table {
@@ -400,25 +398,29 @@ footer { display: none !important; }
 .gradio-container table tbody tr:nth-child(even) td { background: #f8fafc !important; }
 .gradio-container table tbody tr:hover td { background: #eef2ff !important; }
 
-/* Table wrapper — let it grow to fit all rows, no clipping */
+/* ════════ TABLE — proper internal scroll, no clipped rows ════════ */
 .gradio-container [data-testid="dataframe"] {
     border-radius: 12px !important;
     border: 1px solid #e2e8f0 !important;
-    overflow: visible !important;
-    max-height: none !important;
-    height: auto !important;
+    overflow: hidden !important;
 }
 .gradio-container [data-testid="dataframe"] table { border: none !important; }
 
-/* Kill Gradio's internal fixed-height scroll container on the table */
-.gradio-container [data-testid="dataframe"] > div,
+/* Give the inner scroll container a real height + visible scrollbar */
 .gradio-container [data-testid="dataframe"] .table-wrap,
-.gradio-container [data-testid="dataframe"] [class*="table-wrap"],
-.gradio-container [data-testid="dataframe"] [class*="scroll"] {
-    max-height: none !important;
-    height: auto !important;
-    overflow: visible !important;
-    overflow-y: visible !important;
+.gradio-container [data-testid="dataframe"] [class*="table-wrap"] {
+    max-height: 460px !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #cbd5e1 #f1f5f9 !important;
+}
+
+/* Sticky header so columns stay visible while scrolling */
+.gradio-container [data-testid="dataframe"] thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
 }
 
 /* ════════ TICKET DETAILS ════════ */
@@ -516,22 +518,23 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
     100% { background-position: 0 0; }
 }
 
-/* ════════ REFRESH BUTTON — match dropdown block height ════════ */
-#refresh-btn {
-    display: flex !important;
-    align-items: stretch !important;
-    height: 100% !important;
-    min-height: 84px !important;
-}
+/* ════════ FILTER ROW — align dropdown and Refresh button ════════ */
+.eq-row { align-items: flex-end !important; gap: 14px !important; }
+.eq-row > * { margin-bottom: 0 !important; }
+
+#refresh-btn { display: flex !important; align-items: flex-end !important; }
 #refresh-btn button {
     width: 100% !important;
-    height: 100% !important;
-    min-height: 84px !important;
-    max-height: none !important;
-    line-height: normal !important;
-    border-radius: 10px !important;
-    font-size: 14px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    line-height: 44px !important;
+    padding: 0 20px !important;
+    border-radius: 9px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
     overflow: hidden !important;
+    margin-bottom: 0 !important;
 }
 """
 
