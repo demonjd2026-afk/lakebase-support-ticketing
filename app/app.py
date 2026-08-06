@@ -481,7 +481,8 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
 
 /* ════════ BUTTON LOADING SWEEP ════════ */
 .gradio-container button.primary:disabled,
-.gradio-container button.secondary:disabled {
+.gradio-container button.secondary:disabled,
+.gradio-container button.sweeping {
     background: linear-gradient(
         90deg,
         #4f46e5 0%, #4f46e5 40%,
@@ -537,7 +538,8 @@ with gr.Blocks(
                 with gr.Row(equal_height=True, elem_classes=["eq-row"]):
                     filter_dd   = gr.Dropdown(choices=FILTER_OPTIONS, value="All",
                                               label="Filter by status", scale=4)
-                    refresh_btn = gr.Button("Refresh", variant="secondary", scale=1)
+                    refresh_btn = gr.Button("Refresh", variant="secondary", scale=1,
+                                            elem_id="refresh-btn")
 
                 ticket_table = gr.Dataframe(
                     headers=["ID", "Title", "Status", "Priority", "Category",
@@ -631,6 +633,16 @@ with gr.Blocks(
     <div class="ft">
       Support Ticketing System · Powered by Databricks Lakebase · Built with Gradio · Bootcamp Day 1 · 2026
     </div>
+    <script>
+    (function() {
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('#refresh-btn button, #refresh-btn');
+            if (!btn) return;
+            btn.classList.add('sweeping');
+            setTimeout(function() { btn.classList.remove('sweeping'); }, 700);
+        });
+    })();
+    </script>
     """)
 
 if __name__ == "__main__":
