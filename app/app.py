@@ -542,19 +542,21 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
 }
 
 /* ════════ FILTER ROW — align dropdown and Refresh button ════════ */
-.eq-row { align-items: flex-end !important; gap: 14px !important; }
+.eq-row { align-items: stretch !important; gap: 14px !important; }
 .eq-row > * { margin-bottom: 0 !important; }
 
 #refresh-btn {
     display: flex !important;
-    align-items: flex-start !important;
-    padding-top: 26px !important;
+    align-items: flex-end !important;
+    align-self: stretch !important;
+    padding: 0 0 22px 0 !important;
+    margin: 0 !important;
 }
 #refresh-btn button {
     width: 100% !important;
-    height: 44px !important;
-    min-height: 44px !important;
-    max-height: 44px !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    max-height: 46px !important;
     padding: 0 !important;
     margin: 0 !important;
     border-radius: 9px !important;
