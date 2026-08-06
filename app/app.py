@@ -516,30 +516,7 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-/* ════════ REFRESH BUTTON LOADING SWEEP (scoped strictly) ════════ */
-#refresh-btn button.sweeping::after {
-    content: "" !important;
-    position: absolute !important;
-    top: 0 !important; left: 0 !important;
-    width: 100% !important; height: 100% !important;
-    background: linear-gradient(
-        100deg,
-        rgba(255,255,255,0)    0%,
-        rgba(255,255,255,0)   35%,
-        rgba(255,255,255,0.6) 50%,
-        rgba(255,255,255,0)   65%,
-        rgba(255,255,255,0)  100%
-    ) !important;
-    background-size: 200% 100% !important;
-    background-repeat: no-repeat !important;
-    animation: btnSweep 1s linear infinite !important;
-    pointer-events: none !important;
-    border-radius: 9px !important;
-}
 
-@keyframes btnSweep {
-    0%   { background-position: -100% 0; }
-    100% { background-position:  200% 0; }
 }
 }
 
@@ -547,38 +524,19 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
 .eq-row { align-items: stretch !important; gap: 14px !important; }
 .eq-row > * { margin-bottom: 0 !important; }
 
-/* Both action buttons: align vertically centered against the input beside them.
-   Neighbor column = label (~28px) + bordered container (~86px). Input center ≈ 71px.
-   Button 46px → top offset = 71 - 23 = 48px. */
+/* Action buttons: simple, solid, aligned with the input beside them */
 #refresh-btn, #load-btn {
-    display: flex !important;
-    align-items: flex-start !important;
-    padding-top: 48px !important;
+    padding-top: 34px !important;
     margin: 0 !important;
 }
 #refresh-btn button, #load-btn button {
     width: 100% !important;
-    height: 46px !important;
-    min-height: 46px !important;
-    max-height: 46px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border-radius: 9px !important;
-    font-size: 13.5px !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
-    overflow: hidden !important;
-    position: relative !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    line-height: 1 !important;
-    text-align: center !important;
-}
-#refresh-btn button > *, #load-btn button > * {
     margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1 !important;
-    text-align: center !important;
 }
 """
 
@@ -713,18 +671,7 @@ with gr.Blocks(
     <div class="ft">
       Support Ticketing System · Powered by Databricks Lakebase · Built with Gradio · Bootcamp Day 1 · 2026
     </div>
-    <script>
-    (function() {
-        document.addEventListener('click', function(e) {
-            var wrap = e.target.closest('#refresh-btn');
-            if (!wrap) return;
-            var btn = wrap.tagName === 'BUTTON' ? wrap : wrap.querySelector('button');
-            if (!btn) return;
-            btn.classList.add('sweeping');
-            setTimeout(function() { btn.classList.remove('sweeping'); }, 900);
-        }, true);
-    })();
-    </script>
+
     """)
 
 if __name__ == "__main__":
