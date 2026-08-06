@@ -238,19 +238,30 @@ footer { display: none !important; }
     box-shadow: 0 -2px 4px rgba(15,23,42,0.03) !important;
 }
 
-/* Tab content panel: no surrounding box — only the tab-nav underline remains */
+/* Tab content panel: full box with all four borders —
+   the top border is the horizontal line right below the tabs */
 .gradio-container .tabitem,
-.gradio-container [id^="component"].tabitem,
 .gradio-container div[role="tabpanel"] {
-    border: none !important;
+    border: 1px solid #dbe1ea !important;
+    border-radius: 0 10px 10px 10px !important;
+    background: #ffffff !important;
+    padding: 18px !important;
     box-shadow: none !important;
-    background: transparent !important;
-    padding-top: 4px !important;
 }
 .gradio-container .tabs {
     border: none !important;
     box-shadow: none !important;
     background: transparent !important;
+}
+/* Tab bar sits flush on the panel's top border */
+.tab-nav {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+}
+/* Selected tab merges into the panel below it */
+.tab-nav button.selected {
+    margin-bottom: -1px !important;
+    z-index: 2 !important;
 }
 
 /* ════════ PANELS ════════ */
@@ -539,10 +550,14 @@ input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
 .eq-row { align-items: stretch !important; gap: 14px !important; }
 .eq-row > * { margin-bottom: 0 !important; }
 
-/* Action buttons: native Gradio buttons, just aligned beside the input */
+/* Action buttons: elem_id lands on the <button> itself in Gradio —
+   use MARGIN (moves whole button) never padding (would push text out) */
 #refresh-btn, #load-btn {
-    padding-top: 41px !important;
-    margin: 0 !important;
+    margin-top: 41px !important;
+    padding: 0 22px !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    width: 100% !important;
 }
 """
 
